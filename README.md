@@ -136,6 +136,10 @@ The other games: [Hisar](https://furkiozknn.github.io/kale-savunmasi/) ·
 **Round 5:** [Kapadokya Balonu](https://furkiozknn.github.io/kapadokya-balonu/) ·
 [Ebru](https://furkiozknn.github.io/ebru/) · [Kırkpınar](https://furkiozknn.github.io/kirkpinar/)
 
+**Round 6:** [Topkapı Gecesi](https://furkiozknn.github.io/topkapi-gecesi/) ·
+[Hamsi](https://furkiozknn.github.io/hamsi/) · [Pamukkale](https://furkiozknn.github.io/pamukkale/) ·
+[Mimar Sinan](https://furkiozknn.github.io/mimar-sinan/)
+
 ## Türkçe
 
 **Çarşı Kaçışı**, İstanbul'da bir kapalı çarşının kubbeleri üzerinde geçen 3D çatı koşusu. Kuyumcudan yüzüğü çalan
