@@ -1,96 +1,150 @@
-# Çarşı Kaçışı (Bazaar Escape)
+<p align="center">
+  <a href="https://furkiozknn.github.io/carsi-kacisi/"><img src="docs/banner.svg" width="100%" alt="Çarşı Kaçışı (Bazaar Escape): a 3D rooftop runner over the domes of an Istanbul covered bazaar. Click to play in your browser."></a>
+</p>
 
-A 3D rooftop runner over the domes of a covered bazaar in Istanbul. You are a young apprentice chasing the cat that stole a ring from the jeweller. Ten hand-built levels, a roof map, three stars per level, and a synthesised darbuka-and-clarinet loop.
+<p align="center">
+  <a href="https://furkiozknn.github.io/carsi-kacisi/"><img src="https://img.shields.io/badge/%E2%96%B6_Play_now-in_your_browser-0F766E?style=for-the-badge&labelColor=0B1F22" alt="Play now in your browser"></a>
+  <img src="https://img.shields.io/badge/Three.js-r170-E8B04B?style=for-the-badge&logo=threedotjs&logoColor=white&labelColor=0B1F22" alt="Three.js r170">
+  <img src="https://img.shields.io/badge/built_by-Claude_Haiku_5.5-BFE0DC?style=for-the-badge&logo=claude&logoColor=white&labelColor=0B1F22" alt="Built by Claude Haiku 5.5">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-2DD4BF?style=for-the-badge&labelColor=0B1F22" alt="MIT licence"></a>
+  <img src="https://img.shields.io/badge/no_install-desktop_%C2%B7_phone-F3FBFA?style=for-the-badge&labelColor=0B1F22" alt="No install, desktop and phone">
+</p>
 
-Built by Claude Haiku 5.5 with Claude Code from one prompt: [prompts/carsi-kacisi.md](prompts/carsi-kacisi.md)
+<p align="center"><b>A 3D rooftop runner over the domes of a covered bazaar in Istanbul: you are a young apprentice chasing the cat that stole a ring from the jeweller, across ten hand-built levels of roofs, domes, planks and laundry lines.</b></p>
 
-![Title](docs/01-title.png)
+<p align="center">
+  <img src="docs/gameplay.gif" width="640" alt="Çarşı Kaçışı gameplay: the apprentice runs and jumps along the bazaar roofs collecting lokum">
+</p>
 
-## Play
+<p align="center"><b>Play online: <a href="https://furkiozknn.github.io/carsi-kacisi/">https://furkiozknn.github.io/carsi-kacisi/</a></b> (desktop and phone, no install)</p>
 
-Run any static server in this folder, for example `python -m http.server 8000`, and open `http://localhost:8000/`. The game loads Three.js r170 from `cdn.jsdelivr.net`, so it needs an internet connection. If the engine cannot load, the title screen says so and Play stays disabled.
+## Highlights
 
-- Run along the roofs, jump, and jump again in the air once.
-- Slide down the far side of a dome (it gets fast), grab a laundry line and ride it.
-- Step up onto ledges up to 0.45 units high; higher ones need a jump.
-- Falling into the street sends you back to the last checkpoint.
-- Collect the lokum (Turkish delight) along the way. The cat runs about ten units ahead with the ring; catch it where it stops at the end of each level.
-- Stars: finish within the target time, collect 80% of the lokum, and never fall.
-- Levels 1 to 10 unlock in order. Finishing level 10 returns the ring to the jeweller.
+- **Rooftop parkour.** Run along the roofs, jump and jump again in the air once, slide down the far side of a dome (it
+  gets fast), grab a laundry line and ride it, and step up onto low ledges.
+- **Ten hand-built levels.** Each level is a short layout string of roofs, gaps, domes, sliding planks, breaking tiles,
+  laundry lines, gust zones and checkpoints, unlocked in order on a roof map.
+- **A chase with a goal.** The cat runs about ten units ahead with the ring; catch it where it stops at the end of each
+  level, and return the ring to the jeweller after level 10.
+- **Three stars per level.** Finish within the target time, collect 80 % of the lokum (Turkish delight), and never fall.
+- **Night on the roofs.** Levels 8 and 9 run at dusk: pigeons sit on the roofs and flap away as you pass.
+- **Played by a bot.** `?auto` plays all ten levels with the same rules as a player. Measured: **10/10 levels cleared
+  with 0 falls**, 60 fps, 53 draw calls.
+- **One file, made in code.** One `index.html` with Three.js r170 from a CDN; the models, the levels and a synthesised
+  darbuka-and-clarinet loop are all generated in code.
 
-![Gameplay](docs/02-gameplay.png)
+## How to play
 
-## Controls
+> [!TIP]
+> **Goal:** follow the cat along the roofs and catch it at the end of the level. Falling into the street sends you back
+> to the last checkpoint, and costs the no-fall star.
+
+- Steps up to 0.45 units high can be walked onto; higher ones need a jump.
+- The target time is the level length in units divided by 5.
+- Levels 1 to 10 unlock in order.
+
+### Controls
 
 | Action | Keyboard | Touch |
 |---|---|---|
-| Move | `WASD` or arrow keys | Virtual stick (bottom left) |
-| Jump (press again in the air for a second jump) | `Space` | Jump button |
-| Slide | `Shift` | Slide button |
-| Turn the camera | Mouse drag | Drag on the screen |
-| Pause | `P` or `Esc` | Pause icon |
-| Music on/off | `M` | Sound icon |
-| Effects on/off | `X` | Sound icon |
-| Language TR / EN | `L` | Language button |
-| Fullscreen | `F` | Settings |
+| Move | `WASD` or arrow keys | virtual stick (bottom left) |
+| Jump (press again in the air for a second jump) | `Space` | jump button |
+| Slide | `Shift` | slide button |
+| Turn the camera | mouse drag | drag on the screen |
+| Pause | `P` or `Esc` | pause icon |
+| Music on / off | `M` | sound icon |
+| Effects on / off | `X` | sound icon |
+| Language TR / EN | `L` | language button |
+| Fullscreen | `F` | settings |
 
-Every button can be reached with the keyboard, and touch targets are at least 44 px.
+Every button can be reached with the keyboard, and touch targets are at least 44 px. Settings are saved in
+`localStorage` under `arena.carsi.settings`, progress under `arena.carsi.save` and the best result per level under
+`arena.carsi.best`; storage errors are caught, so the game still runs without it.
 
-## Level map and results
-
-![Roof map](docs/04-roof-map.png)
-
-![Result](docs/03-result.png)
-
-The levels are one table (`LEVELS` in `index.html`). Each level is a short layout string such as `R12 C G3 O12 M4 B8 L5 W10 Z`: roofs, gaps, domes, sliding planks, breaking tiles, laundry lines, gust zones, checkpoints, and the cat at the end. The comment above the table lists every token.
-
-Target time is the level length in units divided by 5.
-
-## Night levels
-
-Levels 8 and 9 run at dusk. Pigeons sit on the roofs and flap away as you pass, and now and then a small flock crosses between the camera and the runner.
-
-![Night](docs/06-night.png)
-
-## Phone
-
-![Phone](docs/05-phone.png)
-
-## URL flags
+<details>
+<summary><b>URL flags for testing</b></summary>
 
 | Flag | Effect |
 |---|---|
-| `?lang=en` / `?lang=tr` | Start in English or Turkish |
-| `?low` | Low quality: no shadows, half the particles, pixel ratio 1 |
-| `?debug` | Show fps, draw calls, the mode, and any JavaScript errors |
-| `?auto` | The built-in bot plays through all ten levels (same rules as a player) |
-| `?sim=N` | Start level 1 and fast-forward N game seconds before the first frame |
-| `?noassets` | Accepted for consistency. The game ships no assets, so it changes nothing |
+| `?auto` | the built-in bot plays through all ten levels (same rules as a player) |
+| `?debug` | fps, draw calls, the mode and any JavaScript errors on screen |
+| `?low` | low quality: no shadows, half the particles, pixel ratio 1 |
+| `?sim=N` | start level 1 and fast-forward N game seconds before the first frame |
+| `?lang=en` / `?lang=tr` | start in English or Turkish |
+| `?noassets` | accepted for consistency; the game ships no assets, so it changes nothing |
 
-Test hooks: `window.carsi` exposes the live state (mode, level, time, lokum, falls, player position), and `window.carsiSim(seconds)` fast-forwards the simulation without rendering.
+Test hooks: `window.carsi` exposes the live state (mode, level, time, lokum, falls, player position), and
+`window.carsiSim(seconds)` fast-forwards the simulation without rendering.
 
-## Saved data
+</details>
 
-Settings are saved under `arena.carsi.settings`, progress under `arena.carsi.save`, and the best result per level under `arena.carsi.best` in `localStorage`. Storage errors are caught, so the game still runs without it.
+## Screenshots
 
-## What was verified
+<table>
+  <tr>
+    <td width="33%"><img src="docs/01-title.png" alt="Title screen"><br><sub>Title screen</sub></td>
+    <td width="33%"><img src="docs/02-gameplay.png" alt="Running along the bazaar roofs past a checkpoint, lokum ahead"><br><sub>Level 1: roofs, domes and lokum</sub></td>
+    <td width="33%"><img src="docs/04-roof-map.png" alt="Roof map with the ten levels"><br><sub>The roof map</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/03-result.png" alt="Level result with stars"><br><sub>Level result</sub></td>
+    <td><img src="docs/06-night.png" alt="A night level at dusk with pigeons"><br><sub>Night level</sub></td>
+    <td><img src="docs/05-phone.png" alt="Çarşı Kaçışı on a phone"><br><sub>On a phone</sub></td>
+  </tr>
+</table>
 
-- A bot pass with `?auto` clears all ten levels with zero falls, reaches the ending, and logs no JavaScript errors (headless Chromium). The bot takes 44 to 57 seconds of game time per level.
-- Frame rate in headless Chromium on the development laptop: 60 fps with 50 draw calls during play on level 1. The Intel UHD 620 target was not measured on hardware.
+## Running locally
+
+Serve the folder over HTTP, for example `python -m http.server 8000`, and open <http://localhost:8000/>. The game loads
+Three.js r170 from `cdn.jsdelivr.net`, so it needs an internet connection; if the engine cannot load, the title screen
+says so and Play stays disabled.
+
+## How it was made
+
+Built by **Claude Haiku 5.5** with Claude Code from one prompt: [prompts/carsi-kacisi.md](prompts/carsi-kacisi.md).
+Code, level design, models and sounds are original and built in code; the only external code is Three.js r170 (MIT).
+
+The levels are one table (`LEVELS` in `index.html`). Each level is a short layout string such as
+`R12 C G3 O12 M4 B8 L5 W10 Z`: roofs, gaps, domes, sliding planks, breaking tiles, laundry lines, gust zones,
+checkpoints and the cat at the end. The comment above the table lists every token.
+
+<details>
+<summary><b>What was verified, and known limits</b></summary>
+
+- A bot pass with `?auto` clears all ten levels with zero falls, reaches the ending and logs no JavaScript errors
+  (headless Chromium). The bot takes 44 to 57 seconds of game time per level.
+- 60 fps with 50-53 draw calls during play in headless Chromium on the development laptop. The Intel UHD 620 target
+  was not measured on hardware.
 - Night flock: up to three pigeons on screen at once, confirmed by counting in the running game.
-- Screenshots above were taken from the running game. The touch layout was checked in a separate emulated-phone screenshot that is not in `docs/`.
-
-## Known limits
-
-- Human run times were not measured. The bot takes 44 to 57 seconds per level. The levels are linear, with no branching routes.
+- Human run times were not measured. The levels are linear, with no branching routes.
 - The cat is small on screen at the default camera distance.
-- The synthesised music and effects were not listened to. They are generated with Web Audio and should be checked by ear.
+- The synthesised music and effects were not listened to; they should be checked by ear.
 - Touch controls were checked with device emulation only, not on a real phone.
-- The game pauses when the tab is hidden. Headless screenshots can trigger that pause too.
-- Loading from `file://` was not tested.
+- The game pauses when the tab is hidden. Loading from `file://` was not tested.
 
-## Credits and license
+</details>
 
-Code, level design, models, and sounds are original and built in code. The only external code is Three.js r170 (MIT), loaded from jsdelivr. No third-party assets are used.
+Çarşı Kaçışı is part of the **Claude Game Arena** series, where each game is built by a Claude model from one prompt.
+The other games: [Hisar](https://furkiozknn.github.io/kale-savunmasi/) ·
+[Çay Ocağı](https://furkiozknn.github.io/cay-ocagi/) · [Çini Ustası](https://furkiozknn.github.io/cini-ustasi/) ·
+[Martı](https://furkiozknn.github.io/marti/) · [Kervan](https://furkiozknn.github.io/kervan/) ·
+[Dolmuş](https://furkiozknn.github.io/dolmus/) · [Peri Golf](https://furkiozknn.github.io/peri-golf/) ·
+[Mehter](https://furkiozknn.github.io/mehter/) · [Boğaz Vapuru](https://furkiozknn.github.io/bogaz-vapuru/) ·
+[Simit Fırını](https://furkiozknn.github.io/simit-firini/) · [Karagöz](https://furkiozknn.github.io/karagoz/) ·
+[Lale Bahçesi](https://furkiozknn.github.io/lale-bahcesi/)
 
-Licensed under the MIT License. See [LICENSE](LICENSE).
+**Round 5:** [Kapadokya Balonu](https://furkiozknn.github.io/kapadokya-balonu/) ·
+[Ebru](https://furkiozknn.github.io/ebru/) · [Kırkpınar](https://furkiozknn.github.io/kirkpinar/)
+
+## Türkçe
+
+**Çarşı Kaçışı**, İstanbul'da bir kapalı çarşının kubbeleri üzerinde geçen 3D çatı koşusu. Kuyumcudan yüzüğü çalan
+kediyi kovalayan genç bir çıraksın: çatılarda koş, havada ikinci kez zıpla, kubbelerden kay, çamaşır iplerine tutun ve
+lokumları topla. Çatı haritasında 10 bölüm, her bölümde 3 yıldız. Kurulum yok; masaüstünde ve telefonda tarayıcıda
+oynanır. Claude Haiku 5.5 tarafından Claude Code ile tek bir prompt'tan yapıldı.
+
+**Oyna:** https://furkiozknn.github.io/carsi-kacisi/
+
+## License
+
+MIT, see [LICENSE](LICENSE).
