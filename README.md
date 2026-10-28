@@ -13,7 +13,7 @@
 <p align="center"><b>A 3D rooftop runner over the domes of a covered bazaar in Istanbul: you are a young apprentice chasing the cat that stole a ring from the jeweller, across ten hand-built levels of roofs, domes, planks and laundry lines.</b></p>
 
 <p align="center">
-  <img src="docs/gameplay.gif" width="640" alt="Çarşı Kaçışı gameplay: the apprentice runs and jumps along the bazaar roofs collecting lokum">
+  <img src="docs/gameplay.gif" width="640" alt="Çarşı Kaçışı gameplay: the apprentice runs past numbered gates with split toasts, then catches the white Van cat on the Caught card">
 </p>
 
 <p align="center"><b>Play online: <a href="https://furkiozknn.github.io/carsi-kacisi/">https://furkiozknn.github.io/carsi-kacisi/</a></b> (desktop and phone, no install)</p>
@@ -29,7 +29,7 @@
 - **Three stars per level.** Finish within the target time, collect 80 % of the lokum (Turkish delight), and never fall.
 - **Night on the roofs.** Levels 8 and 9 run at dusk: pigeons sit on the roofs and flap away as you pass.
 - **Played by a bot.** `?auto` plays all ten levels with the same rules as a player. Measured: **10/10 levels cleared
-  with 0 falls** (v2 as well). Headless Chromium, v2: level 1 60 fps and 58 draw calls, level 8 60 fps and 70 to 74 draw calls, level 10 60 fps and 54 draw calls (v1 level 1: 53).
+  with 0 falls** (v2 as well). Headless Chromium, v2: level 1 60 fps and 58 draw calls, level 8 60 fps and 70 to 74 draw calls (over the 65 guideline), level 10 60 fps and 54 draw calls (v1 level 1: 53).
 - **One file, made in code.** One `index.html` with Three.js r170 from a CDN; the models, the levels and a synthesised
   darbuka-and-clarinet loop are all generated in code.
 
@@ -137,8 +137,9 @@ checkpoints and the cat at the end. The comment above the table lists every toke
 
 - A bot pass with `?auto` clears all ten levels with zero falls, reaches the ending and logs no JavaScript errors
   (headless Chromium). The bot takes 44 to 57 seconds of game time per level.
-- 60 fps with 50-53 draw calls during play in headless Chromium on the development laptop. The Intel UHD 620 target
-  was not measured on hardware.
+- 60 fps in headless Chromium on the development laptop: 50-53 draw calls in v1, and in v2 58 on level 1, 54 on level 10
+  and 70 to 74 on level 8, which is over the 65 guideline (known issue). The Intel UHD 620 target was not measured on
+  hardware.
 - Night flock: up to three pigeons on screen at once, confirmed by counting in the running game.
 - Human run times were not measured. The levels are linear, with no branching routes.
 - The cat is small on screen at the default camera distance.
