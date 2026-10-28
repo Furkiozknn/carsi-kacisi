@@ -29,9 +29,33 @@
 - **Three stars per level.** Finish within the target time, collect 80 % of the lokum (Turkish delight), and never fall.
 - **Night on the roofs.** Levels 8 and 9 run at dusk: pigeons sit on the roofs and flap away as you pass.
 - **Played by a bot.** `?auto` plays all ten levels with the same rules as a player. Measured: **10/10 levels cleared
-  with 0 falls**, 60 fps, 53 draw calls.
+  with 0 falls** (v2 as well). Headless Chromium, v2: level 1 60 fps and 58 draw calls, level 8 60 fps and 70 to 74 draw calls, level 10 60 fps and 54 draw calls (v1 level 1: 53).
 - **One file, made in code.** One `index.html` with Three.js r170 from a CDN; the models, the levels and a synthesised
   darbuka-and-clarinet loop are all generated in code.
+
+## v2 update
+
+Upgraded by **Claude Haiku 5.5** with Claude Code from [prompts/carsi-kacisi-v2.md](prompts/carsi-kacisi-v2.md).
+
+- **Hints where you need them.** The first time you meet a gap, a second jump, a dome, a laundry line, a sliding plank,
+  a breaking tile, a wind gust or the pigeons, a short prompt appears at that spot with its key or touch button. Each
+  type shows once per save and never blocks movement.
+- **A cat that reacts.** Running without a stop for about four seconds brings the cat closer; a fall puts it further
+  ahead. At short gaps it turns its head back and hisses. It is now a white Turkish Van with auburn tail and ears.
+- **Numbered gates and splits.** Each checkpoint is a stone arch with its number. Passing one shows the split against
+  its target, the result card lists the splits, and the best split per gate is saved. Star rules are unchanged.
+- **Guild signs.** Each level hides one guild sign on the side of a roof. Finding it opens a notebook card with a
+  sourced fact and counts toward X/10 on the roof map. It has no effect on stars or time.
+- **Unique finales.** The last stretch before the cat differs in every level.
+- **Each level has its own look.** Copper or gold domes, finials, spice sacks, cloth colours, awning strips along the
+  roof edges, and a dusk sky on the last level.
+
+Levels (10), stars (3 per level) and the controls are unchanged. Measured after the upgrade: `?auto` clears 10/10 levels
+with 0 falls and no JavaScript errors, with assets, with `?noassets` and in English. In headless Chromium on level 1
+the game runs at 60 fps with 58 draw calls (v1: 53). Level 8 (night) reads 70 to 74 draw calls, above the 65 budget;
+level 10 reads 54.
+Not every brief item is complete: the guild signs sit on walkable roofs and no elevated high route was built, and the
+six sourced facts repeat across the ten signs.
 
 ## How to play
 
@@ -71,7 +95,7 @@ Every button can be reached with the keyboard, and touch targets are at least 44
 | `?low` | low quality: no shadows, half the particles, pixel ratio 1 |
 | `?sim=N` | start level 1 and fast-forward N game seconds before the first frame |
 | `?lang=en` / `?lang=tr` | start in English or Turkish |
-| `?noassets` | accepted for consistency; the game ships no assets, so it changes nothing |
+| `?noassets` | skips the mascot images on the result and ending cards; the rest of the game is generated in code |
 
 Test hooks: `window.carsi` exposes the live state (mode, level, time, lokum, falls, player position), and
 `window.carsiSim(seconds)` fast-forwards the simulation without rendering.

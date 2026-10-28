@@ -125,6 +125,16 @@ svg{display:block;fill:currentColor}
 #dbg{position:fixed;left:8px;bottom:8px;z-index:40;margin:0;padding:6px 8px;font:12px/1.4 Consolas,monospace;color:#d6ffe9;
   background:rgba(0,0,0,.6);border-radius:8px;max-width:70vw;white-space:pre-wrap;pointer-events:none}
 
+/* first-encounter hint (follows its obstacle), notebook card (guild signs), result and ending mascot */
+.hint{position:fixed;left:0;top:0;z-index:18;pointer-events:none;transform:translate(-50%,-100%);padding:6px 10px;border-radius:10px;
+  background:var(--glass2);border:1px solid rgba(232,176,75,.6);font-size:13px;color:var(--ink);white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.3);animation:tin .25s ease-out}
+.notebook{position:fixed;left:50%;top:calc(74px + var(--sa-t));transform:translateX(-50%);z-index:24;pointer-events:none;width:min(92vw,420px);
+  padding:10px 14px;border-radius:14px;background:var(--glass2);border:1px solid var(--line);font-size:14px;line-height:1.45;color:var(--ink2);
+  animation:tin .3s ease-out;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.notebook h3{margin:0 0 4px;font-family:Georgia,"Times New Roman",serif;color:var(--gold);font-size:15px}
+.notebook p{margin:0}
+.mascot{display:block;height:92px;width:auto;margin:6px auto 0}
+
 @media (max-width:640px){
   .topbar{top:calc(6px + var(--sa-t));left:6px;right:6px;min-height:50px;gap:6px}
   .brand span{display:none}
@@ -171,6 +181,8 @@ svg{display:block;fill:currentColor}
 </header>
 
 <div id="toasts" aria-live="polite"></div>
+<div id="hint" class="hint" hidden></div>
+<div id="notebook" class="notebook" hidden></div>
 
 <div id="touch" hidden>
   <div id="stick" aria-label="Move"><i></i></div>
@@ -210,6 +222,7 @@ svg{display:block;fill:currentColor}
     <h2 id="mapTitle" data-t="roofMap"></h2>
     <p class="sub" data-t="mapHint"></p>
     <div class="mapbox" id="mapBox"></div>
+    <p class="best" id="signCount"></p>
     <div class="row">
       <button class="btn" id="bMapBack" data-t="mainMenu"></button>
       <button class="btn" id="bMapSettings" data-t="settings"></button>
@@ -252,6 +265,7 @@ svg{display:block;fill:currentColor}
     <p class="sub" id="rSub"></p>
     <div class="stars-big" id="rStars"></div>
     <ul class="stats-list" id="rStats"></ul>
+    <img class="mascot" id="rMascot" alt="" src="assets/mascot/kedi-tamam.png" hidden>
     <div class="col">
       <button class="btn pri" id="rNext" data-t="next"></button>
       <div class="row">
@@ -268,6 +282,7 @@ svg{display:block;fill:currentColor}
     <h2 id="eTitle" data-t="ending"></h2>
     <p class="sub" data-t="endingSub"></p>
     <ul class="stats-list" id="eStats"></ul>
+    <img class="mascot" id="eMascot" alt="" src="assets/mascot/kedi-kutlama.png" hidden>
     <div class="col">
       <button class="btn pri" id="eMenu" data-t="mainMenu"></button>
       <button class="btn" id="eAgain" data-t="again"></button>
@@ -308,11 +323,14 @@ if (FLAG.low) S.quality = 'low';
 
 const SAVE = lsGet(KEY.save, {});
 const DONE = Array.from({ length: 10 }, (_, i) => !!(SAVE.done && SAVE.done[i]));
+const SIGNS = Array.from({ length: 10 }, (_, i) => !!(SAVE.signs && SAVE.signs[i]));   // guild sign found per level
+SAVE.seen = SAVE.seen || {};                                                          // first-encounter hints shown
 const BEST = lsGet(KEY.best, {});
 const BESTLV = Array.from({ length: 10 }, (_, i) => (BEST.lv && BEST.lv[i]) || null);
 
 const persistSettings = () => lsSet(KEY.set, S);
-const persistProgress = () => lsSet(KEY.save, { done: DONE });
+// keeps every field already in the save (old saves load unchanged); only adds seen and signs
+const persistProgress = () => { SAVE.done = DONE.slice(); SAVE.signs = SIGNS.slice(); lsSet(KEY.save, SAVE); };
 const persistBest = () => lsSet(KEY.best, { lv: BESTLV });
 
 /* ---------- text ---------- */
@@ -336,7 +354,12 @@ const TX = {
     footer: 'Claude Game Arena · {m} tarafından yapıldı', footerBy: 'Claude Game Arena',
     totalStars: 'Toplam', pausedNote: 'Oyun duraklatıldı',
     hudPause: 'Duraklat', hudSound: 'Ses', touchJump: 'Zıpla', touchSlide: 'Kay', moveLabel: 'Hareket', musicOn: 'Müzik açık', musicOff: 'Müzik kapalı',
-    ready: 'Hazır', clearedAll: 'Tamam'
+    ready: 'Hazır', clearedAll: 'Tamam',
+    hgap: 'Boşluğu aşmak için zıpla', hdjump: 'Havadayken bir kez daha zıpla', hdome: 'Kubbeden kaymak için kay',
+    hrope: 'Çamaşır ipine tutun, sonra zıpla', hplank: 'Kayan tahtada dengede dur', htile: 'Çini çatlıyor: hemen geç',
+    hgust: 'Rüzgâra karşı yön tut', hpigeon: 'Güvercinleri ürkütmeden geç',
+    keyJump: 'Boşluk', keySlide: 'Shift', keyMove: 'WASD', gate: 'Kapı', fact: 'Biliyor muydun?',
+    notebook: 'Lonca defteri', signFound: 'Lonca işareti bulundu', signCount: 'Lonca işaretleri'
   },
   en: {
     name: 'Çarşı Kaçışı', sub: 'Run the rooftops, catch the thief cat.',
@@ -357,7 +380,12 @@ const TX = {
     footer: 'Claude Game Arena · built by {m}', footerBy: 'Claude Game Arena',
     totalStars: 'Total', pausedNote: 'Game paused',
     hudPause: 'Pause', hudSound: 'Sound', touchJump: 'Jump', touchSlide: 'Slide', moveLabel: 'Move', musicOn: 'Music on', musicOff: 'Music off',
-    ready: 'Ready', clearedAll: 'Done'
+    ready: 'Ready', clearedAll: 'Done',
+    hgap: 'Jump the gap', hdjump: 'Jump once more in the air', hdome: 'Slide down the dome',
+    hrope: 'Grab the laundry line, then jump', hplank: 'Stay balanced on the sliding plank', htile: 'Cracking tile: keep moving',
+    hgust: 'Lean into the wind gust', hpigeon: 'Pass the pigeons quietly',
+    keyJump: 'Space', keySlide: 'Shift', keyMove: 'WASD', gate: 'Gate', fact: 'Did you know?',
+    notebook: 'Guild notebook', signFound: 'Guild sign found', signCount: 'Guild signs'
   }
 };
 const tx = (k, v) => {
@@ -376,15 +404,15 @@ const LEVELS = [
   { tr: 'Kiremit Yolu', en: 'Tile Path', seed: 11, night: false, pos: [12, 82],
     layout: 'R14 C k3 G3 R12 k3 G3 R12 C k4 G3 R10 G2 R12 k3 G3 R14 C k4 G3 U1 R10 G2 R12 k4 G3 R10 C G3 R14 k4 G3 R12 G2 R12 k3 G3 R14 G3 D1 R12 C M4 G2 M4 R10 C G3 M4 R10 k3 M4 G3 R12 C M5 G2 M4 R12 G3 M4 G2 U1 R10 C G2 M4 G2 M4 R12 k4 G3 M4 R12 C M4 G3 R14 Z' },
   { tr: 'Kubbe Sırtı', en: 'Dome Ridge', seed: 23, night: false, pos: [28, 64],
-    layout: 'R12 C G3 O12 G3 R10 k3 G3 O12 C G2 R12 G3 O10 k4 G3 R12 U1 G2 O12 k3 G3 R10 C G3 O12 k4 G3 R12 G3 O12 C G2 R14 k3 G3 R12 G3 D1 R12 C G3 B8 G3 B8 R10 C G3 B6 k2 G3 B8 R12 C G3 B8 G3 B6 G2 U1 R10 C G3 B8 G3 B8 k3 R12 C G4 B8 G3 R10 B8 C G3 R14 Z' },
+    layout: 'R12 C G3 O12 G3 R10 k3 G3 O12 C G2 R12 G3 O10 k4 G3 R12 U1 G2 O12 k3 G3 R10 C G3 O12 k4 G3 R12 G3 O12 C G2 R14 k3 G3 R12 G3 D1 R12 C G3 B8 G3 B8 R10 C G3 B6 k2 G3 B8 R12 C G3 B8 G3 B6 G2 U1 R10 C G3 B8 G3 B8 k3 R12 C G4 B8 G3 R10 B8 C G3 O12 G3 R14 Z' },
   { tr: 'Çamaşır İpleri', en: 'Laundry Lines', seed: 37, night: false, pos: [46, 80],
     layout: 'R12 C L5 R10 k2 L6 R12 C L5 R10 L4 R12 k3 L6 R10 C L5 R12 G3 R10 C L6 R12 k4 L5 R14 G3 R12 C G3 R12 W12 G3 R10 k3 G3 R12 C W10 G3 R12 k3 G3 R10 G2 U1 R12 C G3 W12 R10 G3 R12 k4 G3 R10 C W10 G3 R12 G3 R14 Z' },
   { tr: 'Tahta Geçit', en: 'Wooden Walk', seed: 41, night: false, pos: [66, 62],
-    layout: 'R12 C M4 G2 M4 R10 C G3 M4 R10 k3 M4 G3 R12 C M5 G2 M4 R12 G3 M4 G2 U1 R10 C G2 M4 G2 M4 R12 k4 G3 M4 R12 C M4 G3 R14 G3 D1 R12 C G3 O12 G3 M4 R10 k3 G3 B8 R12 C G3 W12 O12 G3 U1 R10 G2 M4 G3 R12 k4 G3 O10 C G3 B8 G3 R10 W10 G3 R12 k3 G3 R12 C G4 R10 Z' },
+    layout: 'R12 C M4 G2 M4 R10 C G3 M4 R10 k3 M4 G3 R12 C M5 G2 M4 R12 G3 M4 G2 U1 R10 C G2 M4 G2 M4 R12 k4 G3 M4 R12 C M4 G3 R14 G3 D1 R12 C G3 O12 G3 M4 R10 k3 G3 B8 R12 C G3 W12 O12 G3 U1 R10 G2 M4 G3 R12 k4 G3 O10 C G3 B8 G3 R10 W10 G3 R12 k3 G3 R12 C G3 O10 M4 R10 Z' },
   { tr: 'Kırılan Çini', en: 'Breaking Tiles', seed: 53, night: false, pos: [84, 80],
-    layout: 'R12 C G3 B8 G3 B8 R10 C G3 B6 k2 G3 B8 R12 C G3 B8 G3 B6 G2 U1 R10 C G3 B8 G3 B8 k3 R12 C G4 B8 G3 R10 B8 C G3 R14 G3 D1 R12 C P2 k3 G3 R10 G3 R12 C G3 O12 P1 k3 G3 R12 C G3 R10 k3 G3 B8 R12 C G3 R10 G3 U1 R12 C P2 k4 G3 R12 G3 O10 C G3 M4 R10 G3 R12 k3 G3 R14 Z' },
+    layout: 'R12 C G3 B8 G3 B8 R10 C G3 B6 k2 G3 B8 R12 C G3 B8 G3 B6 G2 U1 R10 C G3 B8 G3 B8 k3 R12 C G4 B8 G3 R10 B8 C G3 R14 G3 D1 R12 C P2 k3 G3 R10 G3 R12 C G3 O12 P1 k3 G3 R12 C G3 R10 k3 G3 B8 R12 C G3 R10 G3 U1 R12 C P2 k4 G3 R12 G3 O10 C W12 B8 G3 B8 R12 G2 k3 G3 R14 Z' },
   { tr: 'Rüzgâr Kapısı', en: 'Wind Gate', seed: 67, night: false, pos: [86, 46],
-    layout: 'R12 C G3 R12 W12 G3 R10 k3 G3 R12 C W10 G3 R12 k3 G3 R10 G2 U1 R12 C G3 W12 R10 G3 R12 k4 G3 R10 C W10 G3 R12 G3 R14 G3 D1 R12 C L5 R10 k2 G3 R12 W10 G3 M4 R10 C G3 O12 P1 k3 G3 R10 G2 U1 R12 C L5 B8 G3 R10 k3 G3 R12 C G3 M4 G2 M4 R12 G3 O12 C G3 R12 k3 G3 R14 Z' },
+    layout: 'R12 C G3 R12 W12 G3 R10 k3 G3 R12 C W10 G3 R12 k3 G3 R10 G2 U1 R12 C G3 W12 R10 G3 R12 k4 G3 R10 C W10 G3 R12 G3 R14 G3 D1 R12 C L5 R10 k2 G3 R12 W10 G3 M4 R10 C G3 O12 P1 k3 G3 R10 G2 U1 R12 C L5 B8 G3 R10 k3 G3 R12 C G3 M4 G2 M4 R12 G3 O12 C L5 W10 R10 k3 G3 R14 Z' },
   { tr: 'Minare Gölgesi', en: 'Minaret Shadow', seed: 71, night: false, pos: [64, 34],
     layout: 'R12 C G3 O12 G3 M4 R10 k3 G3 B8 R12 C G3 W12 O12 G3 U1 R10 G2 M4 G3 R12 k4 G3 O10 C G3 B8 G3 R10 W10 G3 R12 k3 G3 R12 C G4 R10 G3 D1 R12 C M4 G3 O12 G3 B8 R10 k3 G3 L5 R12 C G3 W10 M4 G2 R12 G2 U1 O12 C G3 B6 G2 R10 k4 G3 L5 R12 C G3 O12 G3 M4 R10 G3 R12 k3 G3 R14 C G3 R14 Z' },
   { tr: 'Güvercin Gecesi', en: 'Pigeon Night', seed: 83, night: true, pos: [42, 44],
@@ -393,6 +421,42 @@ const LEVELS = [
     layout: 'R12 C L5 R10 k2 G3 R12 W10 G3 M4 R10 C G3 O12 P1 k3 G3 R10 G2 U1 R12 C L5 B8 G3 R10 k3 G3 R12 C G3 M4 G2 M4 R12 G3 O12 C G3 R12 k3 G3 R14 G3 D1 R12 C G3 O12 G3 R10 k3 G3 O12 C G2 R12 G3 O10 k4 G3 R12 U1 G2 O12 k3 G3 R10 C G3 O12 k4 G3 R12 G3 O12 C G2 R14 k3 G3 R12 Z' },
   { tr: 'Kuyumcu Çatısı', en: "Jeweller's Roof", seed: 101, night: false, pos: [48, 12],
     layout: 'R12 C M4 G3 O12 G3 B8 R10 k3 G3 L5 R12 C G3 W10 M4 G2 R12 G2 U1 O12 C G3 B6 G2 R10 k4 G3 L5 R12 C G3 O12 G3 M4 R10 G3 R12 k3 G3 R14 C G3 R14 G3 D1 R12 C L5 R10 k2 L6 R12 C L5 R10 L4 R12 k3 L6 R10 C L5 R12 G3 R10 C L6 R12 k4 L5 R14 Z' },
+];
+
+/* ---------- guild facts for the notebook: only these sourced facts; each sign shows FACTS[level % 6] ---------- */
+const FACTS = [
+  // https://en.wikipedia.org/wiki/Grand_Bazaar,_Istanbul
+  { tr: 'Fatih Sultan Mehmed, Cevahir Bedesteni\'ni 1455/56 kışında yaptırmaya başladı; yapı 1460/61\'de bitti.',
+    en: 'Mehmed the Conqueror began the Cevahir Bedesten in the winter of 1455/56; it was finished in 1460/61.' },
+  // https://en.wikipedia.org/wiki/Grand_Bazaar,_Istanbul
+  { tr: '1638 civarında çarşıda yaklaşık 3.000 dükkan ve 18 kapı vardı; 1890\'da 4.399 aktif dükkan ve 24 han kayıtlıydı.',
+    en: 'Around 1638 the bazaar had about 3,000 shops and 18 gates; in 1890, 4,399 active shops and 24 hans were recorded.' },
+  // https://en.wikipedia.org/wiki/Grand_Bazaar,_Istanbul
+  { tr: 'Esnaf, kethüdanın başkanlığındaki loncalardaydı; loncalar 1913\'te kaldırıldı.',
+    en: 'Tradesmen were organised in guilds led by a kethüda; guilds were abolished in 1913.' },
+  // https://en.wikipedia.org/wiki/Grand_Bazaar,_Istanbul
+  { tr: '1943 ve 1954 yangınlarının onarımı 28 Temmuz 1959\'da bitti.',
+    en: 'Repairs after the fires of 1943 and 1954 were finished on 28 July 1959.' },
+  // https://www.karar.com/james-bondun-tahrip-ettigi-kapalicarsi-yenilendi-1509359
+  { tr: 'Çatı restorasyonu Temmuz 2016\'da başladı, 630 iş günü sürdü; 800 bin kiremit ve 40.000 m² çatı yenilendi.',
+    en: 'The roof restoration began in July 2016 and took 630 working days, with 800,000 tiles over 40,000 m² of roof.' },
+  // https://www.karar.com/james-bondun-tahrip-ettigi-kapalicarsi-yenilendi-1509359
+  { tr: 'Skyfall çekimindeki motosikletler 2012\'de kiremitleri kırmıştı.',
+    en: 'Motorcycles used in the filming of Skyfall broke tiles in 2012.' }
+];
+
+/* ---------- per-level look: dome and awning colours, sacks, cloth, finials, sky (read by buildLevel) ---------- */
+const LOOK = [
+  { awn: 0x0F766E },                                                                  // 1 tile path: teal awnings, lead domes
+  { dome: 0xa8673a, finial: 0xE8B04B, awn: 0x0F766E, pots: true },                    // 2 dome ridge: copper domes, gold finials
+  { awn: 0xc2410c, sack: 0xd9a441, cloth: [0xfacc15, 0xe5e7eb, 0xb42318, 0x7c3aed, 0x0f766e] }, // 3 laundry lines
+  { dome: 0xb87333, awn: 0xB42318, sack: 0x9a6a3a, pots: true },                      // 4 wooden walk: copper domes, red awnings
+  { awn: 0x2a8a8f, sack: 0xd9a441, finial: 0xE8B04B },                                // 5 breaking tiles
+  { dome: 0x8a9aa6, awn: 0x7c3aed, cloth: [0x7c3aed, 0xe5e7eb, 0xc2410c] },           // 6 wind gate: slate domes, violet awnings
+  { awn: 0xc2410c, finial: 0xE8B04B, pots: true },                                    // 7 minaret shadow
+  { dome: 0x4b5563, awn: 0x7c3aed, sack: 0x6b4f2a },                                  // 8 pigeon night
+  { awn: 0xc2410c, sack: 0xd9a441, cloth: [0xc2410c, 0xfacc15, 0x0f766e] },           // 9 lantern lane
+  { dome: 0xE8B04B, finial: 0xffe08a, awn: 0xE8B04B, sack: 0xd9a441, sky: 'dusk' }    // 10 jeweller: gold domes, dusk sky
 ];
 
 /* ---------- constants ---------- */
@@ -425,7 +489,8 @@ scene.add(sky);
 // late-afternoon day: saturated blue zenith, warm haze at the horizon; dusk night: deep blue with a warm horizon
 const PAL = {
   day: { top: 0x2a72cc, mid: 0x7fc4f0, hor: 0xffe2ad, fog: 0xf6dcae, sun: 0xffe9bd, sunI: 2.6, hemi: 1.05 },
-  night: { top: 0x070d24, mid: 0x18275a, hor: 0x6b4f7e, fog: 0x4a3c6e, sun: 0xffb27a, sunI: 0.9, hemi: 0.8 }
+  night: { top: 0x070d24, mid: 0x18275a, hor: 0x6b4f7e, fog: 0x4a3c6e, sun: 0xffb27a, sunI: 0.9, hemi: 0.8 },
+  dusk: { top: 0x3b4f9c, mid: 0xe89a6a, hor: 0xffc27a, fog: 0xe5a57a, sun: 0xffb070, sunI: 2.2, hemi: 1.0 }
 };
 let curPal = null;
 function paintSky(name) {
@@ -447,6 +512,16 @@ function paintSky(name) {
   sun.color.setHex(p.sun); sun.intensity = p.sunI; hemi.intensity = p.hemi;
 }
 
+/* ---------- gate numbers: one canvas atlas with 1..18 in cells, so all gates draw in one call ---------- */
+const SIGN_N = 18;
+const digitAtlas = (() => {
+  const c = document.createElement('canvas'); c.width = SIGN_N * 64; c.height = 64;
+  const x = c.getContext('2d');
+  x.fillStyle = '#f3e6cc'; x.font = 'bold 46px Georgia, "Times New Roman", serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  for (let i = 0; i < SIGN_N; i++) x.fillText(String(i + 1), i * 64 + 32, 35);
+  return new THREE.CanvasTexture(c);
+})();
+
 /* ---------- shared materials and primitive geometry ---------- */
 const M = {
   vc: new THREE.MeshLambertMaterial({ vertexColors: true }),
@@ -458,7 +533,7 @@ const M = {
   skin: new THREE.MeshLambertMaterial({ color: 0xc98f63 }),
   fez: new THREE.MeshLambertMaterial({ color: 0xB42318 }),
   pants: new THREE.MeshLambertMaterial({ color: 0x3b3a4a }),
-  cat: new THREE.MeshLambertMaterial({ color: 0xd9822b }),
+  cat: new THREE.MeshLambertMaterial({ color: 0xa4502a }),          // auburn: tail and ear patches of the Turkish Van
   catW: new THREE.MeshLambertMaterial({ color: 0xf4ead8 }),
   gold: new THREE.MeshLambertMaterial({ color: 0xE8B04B, emissive: 0x4a2c00 }),
   bird: new THREE.MeshLambertMaterial({ color: 0x7d8aa0 }),
@@ -471,7 +546,9 @@ const M = {
   moon: new THREE.MeshBasicMaterial({ color: 0xfff4d6, fog: false }),
   shutter: new THREE.MeshLambertMaterial({ color: 0x0F766E }),
   pot: new THREE.MeshLambertMaterial({ color: 0x9a5530 }),
-  leaf: new THREE.MeshLambertMaterial({ color: 0x3f8a4a })
+  leaf: new THREE.MeshLambertMaterial({ color: 0x3f8a4a }),
+  birdVC: new THREE.MeshLambertMaterial({ vertexColors: true }),   // merged pigeons: body, head and wings in vertex colours
+  sign:new THREE.MeshBasicMaterial({ map: digitAtlas, transparent: true, depthWrite: false, side: THREE.DoubleSide })
 };
 const G = {
   box: new THREE.BoxGeometry(1, 1, 1),
@@ -536,6 +613,14 @@ function parseLevel(def) {
   W.spawn = { x: 0, y: 0, z: -2.5 };
   W.lokTotal = W.lok.length;
   W.par = Math.round(W.len / 5);
+  // a checkpoint right at the spawn would count as passed on the first frame: drop it (no gate, no split)
+  W.checks = W.checks.filter(c => c.z < W.spawn.z - 2);
+  // each gate's target time is its share of the par by distance (star rules unchanged)
+  W.checks.forEach((c, i) => { c.i = i; c.target = W.par * -c.z / W.len; });
+  // one hidden guild sign on the side of a walkable roof, about halfway along the level
+  const roofs = W.surf.filter(s => s.t === 'box' && !s.mv && !s.brk && s.z1 - s.z0 >= 8);
+  const sr = roofs[Math.floor(roofs.length / 2)];
+  W.sign = sr ? { x: 4.9, y: sr.top, z: (sr.z0 + sr.z1) / 2 } : null;
   return W;
 }
 
@@ -543,7 +628,8 @@ function parseLevel(def) {
 function paint(g, hex) {
   g.deleteAttribute('uv');
   const c = new THREE.Color(hex), n = g.attributes.position.count, a = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; }
+  const k = 1 + (Math.random() - 0.5) * 0.16;   // +-8 % per primitive: neighbouring roofs and domes differ a little
+  for (let i = 0; i < n; i++) { a[i * 3] = Math.min(1, c.r * k); a[i * 3 + 1] = Math.min(1, c.g * k); a[i * 3 + 2] = Math.min(1, c.b * k); }
   g.setAttribute('color', new THREE.BufferAttribute(a, 3));
   return g;
 }
@@ -563,7 +649,7 @@ function domeAt(cx, base, cz, R, H, hex) {
   g.translate(cx, base, cz);
   return paint(g, hex);
 }
-function domeG(s) { return domeAt(s.cx, s.base, s.cz, s.R, s.H, COL.lead); }
+function domeG(s, hex) { return domeAt(s.cx, s.base, s.cz, s.R, s.H, hex || COL.lead); }
 
 /* ---------- physics world (heightfield of boxes and domes) ---------- */
 let W = null;            // parsed level
@@ -728,9 +814,13 @@ function postStep() {
   for (const c of W.checks) {
     if (!c.hit && P.z <= c.z) {
       c.hit = true; L.respawn = c; AUDIO.check();
-      if (!L.ckToast) { L.ckToast = true; toast(tx('checkpoint'), 'good'); }
+      // split: elapsed time at this gate against its target; the best split per gate is kept per level
+      L.splits[c.i] = L.time;
+      const d = L.time - c.target;
+      toast(tx('gate') + ' ' + (c.i + 1) + ': ' + (d >= 0 ? '+' : '-') + Math.abs(d).toFixed(1) + ' s', d <= 0 ? 'good' : 'info');
     }
   }
+  if (W.sign && !SIGNS[LI] && Math.hypot(P.x - W.sign.x, P.z - W.sign.z) < 1.8 && Math.abs(P.y - W.sign.y) < 2.2) collectSign();
   const gx = P.x, gz = P.z - L.catZ;
   if (gx * gx + gz * gz < CAT_R2) { finishLevel(); return; }
   if (P.y < TOP_Y && P.dead <= 0) kill();
@@ -739,6 +829,7 @@ function postStep() {
 function kill() {
   P.dead = DEATH_T; P.rope = null;
   L.falls++;
+  L.fallT = 6;   // a fall stretches the cat's lead to 13 for a while
   AUDIO.fall(); toast(tx('fell'), 'bad');
   FX.splash(P.x, P.z);
 }
@@ -749,10 +840,39 @@ function respawn() {
   P.vx = 0; P.vy = 0; P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.airJump = 1;
 }
 
-// The cat keeps about 10 units ahead of the runner, never beyond the goal, and runs at most 9 units/s.
+// The runner's flow: running without a stop for about 4 s brings the cat down to 6 units; a fall stretches it to 13.
+// The lead never goes below 5, so the CAT_R2 catch is unchanged.
+function updateLead(dt) {
+  const sp = Math.hypot(P.vx, P.vz);
+  L.flow = sp > 2 && !P.rope ? L.flow + dt : 0;
+  L.fallT = Math.max(0, L.fallT - dt);
+  const want = L.fallT > 0 ? 13 : L.flow >= 4 ? 6 : 10;
+  L.lead = Math.max(5, L.lead + Math.max(-2 * dt, Math.min(2 * dt, want - L.lead)));
+}
+
+// The cat keeps ahead of the runner by its lead, never beyond the goal, and runs at most 9 units/s.
 function updateCat(dt) {
-  const target = Math.max(W.goal.z, P.z - 10);
+  const target = Math.max(W.goal.z, P.z - L.lead);
   L.catZ += Math.max(-9 * dt, Math.min(9 * dt, target - L.catZ));
+}
+
+// the first guild sign of a level: the notebook opens with a sourced fact; the sign counts on the roof map
+function collectSign() {
+  SIGNS[LI] = true; persistProgress();
+  AUDIO.check(); FX.spark(W.sign.x, W.sign.y + 1.5, W.sign.z);
+  toast(tx('signFound'), 'good');
+  showNotebook(LI);
+}
+let nbTimer = 0;
+function showNotebook(i) {
+  const f = FACTS[i % FACTS.length];
+  const nb = el('notebook');
+  nb.textContent = '';
+  const h = document.createElement('h3'); h.textContent = tx('notebook') + ' · ' + tx('fact');
+  const p = document.createElement('p'); p.textContent = S.lang === 'tr' ? f.tr : f.en;
+  nb.append(h, p);
+  nb.hidden = false;
+  clearTimeout(nbTimer); nbTimer = setTimeout(() => { nb.hidden = true; }, 8000);
 }
 
 // Height of the roof under the cat, for drawing only; over a gap the cat arcs between the two roofs.
@@ -791,7 +911,7 @@ function simStep(dt) {
   if (P.rope) ropeStep(dt, inp);
   else stepPlayer(dt, inp);
   postStep();
-  if (mode === 'play') updateCat(dt);
+  if (mode === 'play') { updateLead(dt); updateCat(dt); }
 }
 
 function readInput() {
@@ -866,9 +986,12 @@ world.add(player.g, cat.g, ring);
   const blocks = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), M.leadI, N);
   const drums = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 12), M.leadI, N);
   const domes = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), M.leadI, N);
+  const finials = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), M.leadI, Math.ceil(N / 3));
+  let nf = 0;
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), pos = new THREE.Vector3(), sc = new THREE.Vector3(), col = new THREE.Color();
   const put = (mesh, i, x, y, z, sx, sy, sz) => { pos.set(x, y, z); sc.set(sx, sy, sz); m4.compose(pos, q, sc); mesh.setMatrixAt(i, m4); };
   const STONES = [0xe6d3ae, 0xd9c09a, 0xcfb089, 0xf0e2c4, 0xdcc6a2];
+  const DRUMS = [0xe9dcc2, 0xd9c7a3, 0xcdb48c, 0xf3ead6, 0xbfa77f];   // pale stone drums in a few tones
   const hidden = 0.0001;
   let n = 0;
   for (const side of [-1, 1]) {
@@ -882,16 +1005,18 @@ world.add(player.g, cat.g, ring);
         const hasDrum = rnd() < 0.75;
         if (hasDrum) {
           put(drums, n, cx, top + 0.35, cz, 1.2, 0.7, 1.2);
-          col.set(rnd() < 0.25 ? 0x0F766E : 0xe9dcc2);          // teal tile drums and pale stone drums
+          col.set(rnd() < 0.25 ? 0x0F766E : DRUMS[Math.floor(rnd() * DRUMS.length)]);   // teal tile drums and pale stone drums
           drums.setColorAt(n, col);
           const R = 1.1 + rnd() * 0.2, H = 0.9 + rnd() * 0.2;
           put(domes, n, cx, top + 0.7, cz, R, H, R);
+          if (n % 3 === 0) { put(finials, nf, cx, top + 0.7 + H + 0.12, cz, 0.13, 0.3, 0.13); finials.setColorAt(nf, col.set(0xE8B04B)); nf++; }   // a gold finial on every 3rd dome
         } else {
           put(drums, n, cx, top, cz, hidden, hidden, hidden);
           drums.setColorAt(n, col);
           put(domes, n, cx, top, cz, hidden, hidden, hidden);
         }
-        col.set([0x6f7780, 0x7d858d, 0x646c74][Math.floor(rnd() * 3)]);   // lead grey domes
+        col.set([0x6f7780, 0x7d858d, 0x646c74][Math.floor(rnd() * 3)]);   // lead grey domes, each +-8 % in tone
+        col.multiplyScalar(0.92 + rnd() * 0.16);
         domes.setColorAt(n, col);
       }
     }
@@ -901,6 +1026,9 @@ world.add(player.g, cat.g, ring);
     im.instanceColor.needsUpdate = true;
     scene.add(im);
   }
+  finials.count = nf;
+  finials.instanceMatrix.needsUpdate = true;
+  if (nf) { finials.instanceColor.needsUpdate = true; scene.add(finials); }
 
   // dark gutters: along the rows and along the block columns
   const gut = [];
@@ -959,35 +1087,44 @@ function makePlayer() {
   const armR = pivot(body, 0.36, 1.38); part(armR, G.box, M.tunic, [0, -0.3, 0], [0.14, 0.6, 0.14]);
   return { g, body, legL, legR, armL, armR };
 }
+// The thief cat: a white Turkish Van with auburn tail and ear patches. Its head is a pivot, so it can turn to look back.
 function makeCat() {
   const g = new THREE.Group();
   const body = new THREE.Group(); g.add(body);
-  part(body, G.sph, M.cat, [0, 0.42, 0], [0.46, 0.36, 0.82]);
-  part(body, G.sph, M.cat, [0, 0.66, -0.5], [0.36, 0.34, 0.36]);
-  part(body, G.sph, M.catW, [0, 0.56, -0.7], [0.2, 0.14, 0.18]);
-  part(body, G.box, M.cat, [-0.1, 0.9, -0.5], [0.1, 0.18, 0.08]);
-  part(body, G.box, M.cat, [0.1, 0.9, -0.5], [0.1, 0.18, 0.08]);
-  const tail = pivot(body, 0, 0.5, 0.4); part(tail, G.box, M.cat, [0, 0.1, 0.3], [0.08, 0.08, 0.6]);
-  for (const [x, z] of [[-0.14, -0.3], [0.14, -0.3], [-0.14, 0.3], [0.14, 0.3]]) part(body, G.box, M.cat, [x, 0.14, z], [0.1, 0.28, 0.1]);
-  g.rotation.y = Math.PI;
-  g.scale.setScalar(1.5);   // larger so the target reads from the camera
-  return { g, body, tail };
+  part(body, G.sph, M.catW, [0, 0.42, 0], [0.5, 0.4, 0.86]);
+  part(body, G.sph, M.cat, [0, 0.66, 0.1], [0.3, 0.12, 0.36]);       // auburn saddle on the back
+  const head = new THREE.Group(); head.position.set(0, 0.66, -0.5); body.add(head);
+  part(head, G.sph, M.catW, [0, 0, 0], [0.38, 0.34, 0.38]);
+  part(head, G.sph, M.catW, [0, -0.08, -0.22], [0.2, 0.14, 0.18]);   // muzzle
+  part(head, G.box, M.cat, [-0.12, 0.27, 0], [0.11, 0.2, 0.08]);     // auburn ears
+  part(head, G.box, M.cat, [0.12, 0.27, 0], [0.11, 0.2, 0.08]);
+  const tail = pivot(body, 0, 0.5, 0.4); part(tail, G.box, M.cat, [0, 0.1, 0.3], [0.1, 0.1, 0.7]);
+  for (const [x, z] of [[-0.14, -0.3], [0.14, -0.3], [-0.14, 0.3], [0.14, 0.3]]) part(body, G.box, M.catW, [x, 0.14, z], [0.1, 0.28, 0.1]);
+  g.scale.setScalar(1.9);   // larger so the target reads from the camera
+  return { g, body, head, tail };
 }
+// a pigeon is one merged mesh with vertex colours (body, head, both wings): one draw call per bird.
+// The wings flap as a tilt of the whole bird, and birds are too small to cast shadows.
 function makeBird() {
-  const g = new THREE.Group();
-  part(g, G.sph, M.bird, [0, 0, 0], [0.3, 0.22, 0.46]);
-  part(g, G.sph, M.bird, [0, 0.1, -0.26], [0.16, 0.16, 0.16]);
-  const wl = pivot(g, -0.06, 0.05, 0); part(wl, G.box, M.birdW, [-0.14, 0, 0], [0.3, 0.04, 0.3]);
-  const wr = pivot(g, 0.06, 0.05, 0); part(wr, G.box, M.birdW, [0.14, 0, 0], [0.3, 0.04, 0.3]);
+  const parts = [
+    blobG(0, 0, 0, 0.3, 0.22, 0.46, 0x7d8aa0),
+    blobG(0, 0.1, -0.26, 0.16, 0.16, 0.16, 0x7d8aa0),
+    boxG(-0.35, -0.05, 0.03, 0.07, -0.15, 0.15, 0xe9edf2),
+    boxG(0.05, 0.35, 0.03, 0.07, -0.15, 0.15, 0xe9edf2)
+  ];
+  const geo = mergeGeometries(parts, false);
+  for (const p of parts) p.dispose();
+  const g = new THREE.Mesh(geo, M.birdVC);
+  g.castShadow = false;
   g.scale.setScalar(0.9);
-  return { g, wl, wr };
+  return { g };
 }
 
 function buildLevel(def) {
   // dispose previous per-level geometry
   for (const m of cur.meshes) { world.remove(m); if (m.geometry) m.geometry.dispose(); }
   if (lokMesh) { world.remove(lokMesh); lokMesh.dispose(); }
-  for (const b of birds) world.remove(b.g);
+  for (const b of birds) { world.remove(b.g); b.g.geometry.dispose(); }
   birds.length = 0;
   for (const g of cur.geo) g.dispose();
   cur = { geo: [], meshes: [] };
@@ -995,23 +1132,33 @@ function buildLevel(def) {
   W = parseLevel(def);
   SURF = W.surf;
   for (const s of SURF) { s.on = true; if (s.brk) { s.st = 0; s.t0 = 0; s.t1 = 0; s.fv = 0; } if (s.mv) { s.off = 0; s.dx = 0; s.prev = s.amp * Math.sin(s.ph); } }
-  paintSky(def.night ? 'night' : 'day');
+  const LK = LOOK[LI] || {};
+  paintSky(def.night ? 'night' : (LK.sky || 'day'));
 
   // static merged world
   const statics = [];
   const rnd = rng(def.seed + 7);
   const lanternAt = [];   // positions for the night glow
   const STONE = [0xd7bf9a, 0xcaa77c, 0xe2cba3, 0xbf9c70, 0xd9b68a];
+  const COBBLE = [0xb59a72, 0xa68b63, 0xc2a882, 0x9c8058, 0xb8a07a];   // warm cobbles for the run surface
+  let di = 0;
   for (const s of SURF) {
     if (s.t === 'dome') {
-      statics.push(domeG(s));
+      statics.push(domeG(s, LK.dome));
+      if (LK.finial) statics.push(blobG(s.cx, s.base + s.H + 0.25, s.cz, 0.2, 0.5, 0.2, LK.finial));   // gold finial with a glint on top
+      else if (di++ % 3 === 0) statics.push(blobG(s.cx, s.base + s.H + 0.25, s.cz, 0.2, 0.5, 0.2, 0xE8B04B));   // every 3rd dome: a small gold finial
+      if (LK.pots && rnd() < 0.6) statics.push(blobG(s.cx - s.R * 0.85, s.base + 0.5, s.cz, 0.3, 0.36, 0.3, 0x9a5530));  // copper pot at the dome foot
       if (rnd() < 0.4) statics.push(blobG(s.cx + s.R * 0.4, s.base + s.H * 0.7, s.cz, 0.32, 0.24, 0.44, 0x7d8aa0));  // pigeon on the dome
       continue;
     }
     if (s.mv || s.brk) continue;
     // the run surface: a flat lead roof on a stone body, with light trim along the edges
     statics.push(boxG(s.x0, s.x1, s.top - 7, s.top - 0.4, s.z0, s.z1, STONE[Math.floor(rnd() * STONE.length)]));
-    statics.push(boxG(s.x0, s.x1, s.top - 0.4, s.top, s.z0, s.z1, [0x7f8790, 0x8a929a, 0x737b84][Math.floor(rnd() * 3)]));
+    // cobbled run surface: four warm stone strips with their own tones, dark gutters along both edges
+    const zl = (s.z1 - s.z0) / 4;
+    for (let q = 0; q < 4; q++) statics.push(boxG(s.x0 + 0.22, s.x1 - 0.22, s.top - 0.4, s.top, s.z0 + q * zl, s.z0 + (q + 1) * zl, COBBLE[Math.floor(rnd() * COBBLE.length)]));
+    statics.push(boxG(s.x0 + 0.22, s.x0 + 0.6, s.top - 0.4, s.top + 0.01, s.z0, s.z1, 0x5b4a3a));
+    statics.push(boxG(s.x1 - 0.6, s.x1 - 0.22, s.top - 0.4, s.top + 0.01, s.z0, s.z1, 0x5b4a3a));
     statics.push(boxG(s.x0, s.x1, s.top, s.top + 0.14, s.z0, s.z0 + 0.22, 0xf3e6cc));
     statics.push(boxG(s.x0, s.x1, s.top, s.top + 0.14, s.z1 - 0.22, s.z1, 0xf3e6cc));
     statics.push(boxG(s.x0, s.x0 + 0.22, s.top, s.top + 0.14, s.z0, s.z1, 0xf3e6cc));
@@ -1040,6 +1187,17 @@ function buildLevel(def) {
       statics.push(boxG(px - 0.3, px + 0.3, s.top, s.top + 0.5, zc - 0.3, zc + 0.3, 0x9a5530));
       statics.push(blobG(px, s.top + 0.9, zc, 0.7, 0.6, 0.7, 0x3f8a4a));
     }
+    if (s.z1 > -60 && rnd() < 0.8) {   // first 60 units: sacks and copper pots on the roof edges, so the first screen reads as a bazaar
+      const zc = s.z0 + 1.2 + rnd() * Math.max(0.5, (s.z1 - s.z0) - 2.4);
+      statics.push(blobG(-4.9, s.top + 0.3, zc, 0.42, 0.32, 0.36, 0xd9a441));
+      statics.push(blobG(4.9, s.top + 0.25, zc, 0.36, 0.3, 0.36, 0xb87333));
+    }
+    if (LK.sack && rnd() < 0.35) {   // spice sacks stacked by the roof edge
+      const zc = s.z0 + 1.5 + rnd() * Math.max(0.5, (s.z1 - s.z0) - 3);
+      const px = rnd() < 0.5 ? -4.9 : 4.9;
+      statics.push(blobG(px, s.top + 0.3, zc, 0.42, 0.32, 0.36, LK.sack));
+      statics.push(blobG(px, s.top + 0.56, zc, 0.3, 0.22, 0.3, LK.sack));
+    }
     if (def.night && rnd() < 0.7) {   // lantern on a pole
       const zc = s.z0 + 1.2;
       statics.push(boxG(-5.4, -5.3, s.top, s.top + 2.4, zc, zc + 0.1, COL.wood));
@@ -1056,16 +1214,61 @@ function buildLevel(def) {
     statics.push(boxG(-0.04, 0.04, ln.y - 0.04, ln.y + 0.04, ln.zb, ln.za, 0x3b2f2a));
     statics.push(boxG(-0.06, 0.06, ln.h, ln.y, ln.za - 0.06, ln.za + 0.06, 0x5a4636));
     statics.push(boxG(-0.06, 0.06, ln.h, ln.y, ln.zb - 0.06, ln.zb + 0.06, 0x5a4636));
-    const cn = 4;
+    const cn = 4, cloth = LK.cloth || COL.cloth;
     for (let i = 0; i < cn; i++) {
       const zc = ln.za - (ln.za - ln.zb) * (i + 0.5) / cn;
-      const col = COL.cloth[(i + Math.abs(Math.round(ln.za))) % COL.cloth.length];
+      const col = cloth[(i + Math.abs(Math.round(ln.za))) % cloth.length];
       statics.push(boxG(-0.3, 0.3, ln.y - 0.9, ln.y - 0.1, zc - 0.25, zc + 0.25, col));
     }
   }
-  for (const c of W.checks) {
-    statics.push(boxG(-0.05, 0.05, c.y, c.y + 2.4, c.z - 0.05, c.z + 0.05, 0x5a4636));
-    statics.push(boxG(0.0, 0.7, c.y + 1.7, c.y + 2.4, c.z - 0.04, c.z + 0.04, COL.teal));
+  // checkpoints: a numbered stone gate arch over the roof; the numbers come from the digit atlas (one draw call)
+  const nums = [];
+  W.checks.forEach((c, i) => {
+    const hx = 5.3;
+    statics.push(boxG(-hx - 0.35, -hx + 0.35, c.y, c.y + 3.4, c.z - 0.6, c.z + 0.6, COL.stone2));
+    statics.push(boxG(hx - 0.35, hx + 0.35, c.y, c.y + 3.4, c.z - 0.6, c.z + 0.6, COL.stone2));
+    statics.push(boxG(-hx - 0.35, hx + 0.35, c.y + 3.4, c.y + 3.95, c.z - 0.6, c.z + 0.6, COL.stone));
+    statics.push(boxG(-0.5, 0.5, c.y + 2.95, c.y + 3.95, c.z + 0.6, c.z + 0.66, COL.teal));
+    const q = new THREE.PlaneGeometry(0.9, 0.9);
+    q.translate(0, c.y + 3.45, c.z + 0.7);
+    const uv = q.attributes.uv;
+    for (let k = 0; k < uv.count; k++) uv.setX(k, (i + uv.getX(k)) / SIGN_N);
+    nums.push(q);
+  });
+  if (nums.length) {
+    const ng = mergeGeometries(nums, false);
+    if (ng) { const nm = new THREE.Mesh(ng, M.sign); world.add(nm); cur.meshes.push(nm); cur.geo.push(ng); }
+    for (const g of nums) g.dispose();
+  }
+
+  // awning strips hang over the roof edges, from the spawn onwards: one InstancedMesh, 40 at most, alternating colour
+  const awnAt = [];
+  for (const s of SURF) {
+    if (s.t !== 'box' || s.mv || s.brk) continue;
+    for (let zc = s.z0 + 1.5; zc < s.z1 - 1 && awnAt.length < 40; zc += 4) {
+      awnAt.push([s.x1 + 0.3, s.top - 0.8, zc]);
+      if (awnAt.length < 40) awnAt.push([s.x0 - 0.3, s.top - 0.8, zc]);
+    }
+  }
+  if (awnAt.length) {
+    const ag = new THREE.BoxGeometry(1, 1, 1);
+    const im = new THREE.InstancedMesh(ag, M.leadI, awnAt.length);
+    const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), pos = new THREE.Vector3(), sc = new THREE.Vector3(1.0, 0.2, 2.4), col = new THREE.Color();
+    const awnCol = LK.awn || COL.awn;
+    awnAt.forEach(([x, y, z], i) => {
+      pos.set(x, y, z); m4.compose(pos, q4, sc); im.setMatrixAt(i, m4);
+      im.setColorAt(i, col.setHex(i % 2 ? 0xf3e6cc : awnCol));
+    });
+    im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true;
+    world.add(im); cur.meshes.push(im); cur.geo.push(ag);
+  }
+
+  // the guild sign: a small board on a post, only while this level's sign is still to be found
+  if (W.sign && !SIGNS[LI]) {
+    const sg = W.sign;
+    statics.push(boxG(sg.x - 0.06, sg.x + 0.06, sg.y, sg.y + 1.1, sg.z - 0.05, sg.z + 0.05, COL.wood));
+    statics.push(boxG(sg.x - 0.5, sg.x + 0.5, sg.y + 0.9, sg.y + 1.5, sg.z - 0.06, sg.z + 0.06, 0x2b5e5a));
+    statics.push(boxG(sg.x - 0.55, sg.x + 0.55, sg.y + 1.45, sg.y + 1.52, sg.z - 0.07, sg.z + 0.07, 0xE8B04B));
   }
   // goal stall and the jeweller
   const gz = W.goal.z, jz = W.jw.z;
@@ -1137,13 +1340,14 @@ function buildLevel(def) {
   }
   // flock pool for night levels (reused during play)
   if (def.night) {
-    for (let i = 0; i < 6; i++) { const b = makeBird(); b.pool = true; b.fl = 0; b.vx = 0; b.g.visible = false; world.add(b.g); birds.push(b); }
+    for (let i = 0; i < 4; i++) { const b = makeBird(); b.pool = true; b.fl = 0; b.vx = 0; b.g.visible = false; world.add(b.g); birds.push(b); }
   }
 
   L = {
     def, index: LI, time: 0, lokGot: 0, falls: 0, lokTotal: W.lokTotal, par: W.par, done: false, caughtT: 0,
     respawn: W.spawn, started: false, flockT: 1.2, flockIdx: 0, lastFlap: 0,
-    catZ: Math.max(W.goal.z, W.spawn.z - 10), caughtWall: 0
+    catZ: Math.max(W.goal.z, W.spawn.z - 10), caughtWall: 0,
+    lead: 10, flow: 0, fallT: 0, hissT: -1e9, splits: W.checks.map(() => null)
   };
   P.x = W.spawn.x; P.y = W.spawn.y; P.z = W.spawn.z;
   P.vx = P.vy = P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.dead = 0; P.airJump = 1;
@@ -1312,6 +1516,10 @@ function frameVisuals(dt, now) {
     cat.g.position.set(cx, cy + bob, cz);
     cat.g.rotation.y = L.done ? Math.PI : 0;   // running away: head toward -z; caught: head toward the runner
     cat.tail.rotation.y = Math.sin(t * (runner ? 12 : 4)) * 0.6;
+    // a short gap: the cat turns its head back to the runner and hisses now and then
+    const close = mode === 'play' && !L.done && L.lead < 7.5;
+    cat.head.rotation.y += ((close ? Math.PI : 0) - cat.head.rotation.y) * Math.min(1, dt * 6);
+    if (close && now - L.hissT > 3500) { L.hissT = now; AUDIO.hiss(); }
     ring.position.set(cx, cy + 1.25 + bob + Math.sin(t * 2) * 0.06, cz);
     ring.rotation.y = t * 2.2;
     if (L.done) {
@@ -1343,7 +1551,7 @@ function frameVisuals(dt, now) {
         if (p.fly <= 0) { p.g.g.position.set(p.x, p.y + 0.22, p.z); p.g.g.visible = true; }
       }
       const flap = p.fly > 0 ? Math.sin(t * 30) * 0.9 : Math.sin(t * 2 + p.x) * 0.05;
-      p.g.wl.rotation.z = flap; p.g.wr.rotation.z = -flap;
+      p.g.g.rotation.z = flap * 0.25;
     }
   }
   if (mode === 'play' && L && L.def.night) {
@@ -1373,7 +1581,7 @@ function frameVisuals(dt, now) {
     b.g.position.x += b.vx * dt;
     if (b.fl <= 0) { b.g.visible = false; continue; }
     const f = Math.sin(t * 34) * 1.0;
-    b.wl.rotation.z = f; b.wr.rotation.z = -f;
+    b.g.rotation.z = f * 0.25;
   }
 
   // lokum
@@ -1382,6 +1590,55 @@ function frameVisuals(dt, now) {
   updateSun();
   sky.position.copy(camera.position);
   moon.position.copy(camera.position).addScaledVector(MOON_DIR, 300);
+}
+
+/* ---------- first-encounter hints: once per type (SAVE.seen), placed at the obstacle, never blocks movement ---------- */
+const HINT_KEY = { gap: 'jump', djump: 'jump', dome: 'slide', rope: 'jump', plank: 'move', tile: 'move', gust: 'move', pigeon: '' };
+const elHint = document.getElementById('hint');
+let hintLeft = 0, hintAt = null;
+const hintPos = new THREE.Vector3();
+function keyName(k) {
+  if (!k) return '';
+  const touch = !el('touch').hidden;
+  if (k === 'jump') return touch ? tx('touchJump') : tx('keyJump');
+  if (k === 'slide') return touch ? tx('touchSlide') : tx('keySlide');
+  return touch ? tx('moveLabel') : tx('keyMove');
+}
+// obstacles within about 8 units ahead of the runner, in the order the runner meets them
+function hintCandidates() {
+  const out = [];
+  if (!W || !L || P.dead > 0) return out;
+  if (!P.grounded && !P.rope && P.vy < -1 && P.airJump === 1 && groundAt(P.x, P.z) === -Infinity) out.push(['djump', P.x, P.y + 2, P.z]);
+  if (P.grounded) {
+    for (let k = 1; k <= 8; k += 0.5) if (groundAt(P.x, P.z - k) === -Infinity) { out.push(['gap', P.x, P.y + 2.2, P.z - k]); break; }
+  }
+  for (const s of SURF) {
+    if (s.t === 'dome' && Math.abs(P.z - s.cz) < s.R + 8 && Math.abs(P.x - s.cx) < s.R + 2) out.push(['dome', s.cx, s.base + s.H + 0.6, s.cz]);
+    if (s.t === 'box' && (s.mv || s.brk) && P.z - s.z1 < 8 && P.z > s.z0) out.push([s.mv ? 'plank' : 'tile', 0, s.top + 2, (s.z0 + s.z1) / 2]);
+  }
+  for (const ln of W.lines) if (P.z - ln.za < 8 && P.z > ln.zb) out.push(['rope', ln.x, ln.y + 1, (ln.za + ln.zb) / 2]);
+  for (const g of W.gusts) if (P.z - g.z1 < 8 && P.z > g.z0) out.push(['gust', 0, P.y + 2.5, (g.z0 + g.z1) / 2]);
+  for (const p of W.perch) if (p.g && Math.hypot(P.x - p.x, P.z - p.z) < 8) out.push(['pigeon', p.x, p.y + 1.2, p.z]);
+  return out;
+}
+function updateHints(dt) {
+  if (mode !== 'play') { elHint.hidden = true; hintLeft = 0; return; }
+  if (hintLeft > 0) {
+    hintLeft -= dt;
+    const v = hintPos.copy(hintAt).project(camera);
+    elHint.style.left = ((v.x * 0.5 + 0.5) * innerWidth) + 'px';
+    elHint.style.top = ((-v.y * 0.5 + 0.5) * innerHeight - 10) + 'px';
+    elHint.hidden = hintLeft <= 0 || v.z > 1;
+    return;
+  }
+  for (const [type, x, y, z] of hintCandidates()) {
+    if (SAVE.seen[type]) continue;
+    SAVE.seen[type] = true; persistProgress();
+    const key = keyName(HINT_KEY[type]);
+    elHint.textContent = tx('h' + type) + (key ? '  ·  ' + key : '');
+    hintAt = new THREE.Vector3(x, y, z); hintLeft = 3.2;
+    break;
+  }
 }
 
 /* ---------- toast and HUD ---------- */
@@ -1505,6 +1762,7 @@ const AUDIO = (() => {
       if (!ctx) return;
       tone(620, 980, 0.28, 0.14, 'sawtooth'); tone(980, 560, 0.3, 0.12, 'sawtooth', 0.28);
     },
+    hiss() { noise(4200, 2.5, 0.42, 0.16, 'highpass'); },
     win() { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.3, 0.2, 'triangle', i * 0.12)); },
     click() { tone(900, 900, 0.04, 0.15, 'square'); }
   };
@@ -1524,6 +1782,7 @@ function lvName(i) { return S.lang === 'tr' ? LEVELS[i].tr : LEVELS[i].en; }
 function renderMap() {
   const box = el('mapBox');
   box.innerHTML = '';
+  el('signCount').textContent = tx('signCount') + ': ' + SIGNS.filter(Boolean).length + ' / 10';
   const route = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   route.setAttribute('class', 'route'); route.setAttribute('viewBox', '0 0 100 100'); route.setAttribute('preserveAspectRatio', 'none');
   route.innerHTML = '<polyline points="' + LEVELS.map(l => l.pos.join(',')).join(' ') + '" fill="none" stroke="rgba(122,101,72,.7)" stroke-width="1.6" stroke-dasharray="3 2"/>';
@@ -1563,7 +1822,12 @@ function showResult(stars, r) {
     [tx('statFalls'), String(r.falls)],
     [tx('statStars'), stars.filter(Boolean).length + ' / 3']
   ];
-  el('rStats').innerHTML = rows.map(([a, b]) => '<li><span>' + a + '</span><b>' + b + '</b></li>').join('');
+  // every passed gate in one compact row (one line per gate would push the buttons off a 720 px screen)
+  const gates = (r.gates || []).map((d, i) => (d == null ? null : i + 1 + ' ' + (d >= 0 ? '+' : '-') + Math.abs(d).toFixed(1)))
+    .filter(Boolean);
+  el('rStats').innerHTML = rows.map(([a, b]) => '<li><span>' + a + '</span><b>' + b + '</b></li>').join('') +
+    (gates.length ? '<li class="gates"><span>' + tx('gate') + ' (s)</span><b>' + gates.join(' · ') + '</b></li>' : '');
+  el('rMascot').hidden = FLAG.noassets;
   el('rRecord').hidden = !r.record;
   el('rNext').hidden = LI >= LEVELS.length - 1;
   el('rNext').textContent = tx('next');
@@ -1578,12 +1842,14 @@ function showEnding() {
     [tx('statTotal'), total + ' / 30'],
     [tx('level') + ' 10 / 10', tx('clearedAll')]
   ].map(([a, b]) => '<li><span>' + a + '</span><b>' + b + '</b></li>').join('');
+  el('eMascot').hidden = FLAG.noassets;
   show('scEnding');
   AUDIO.meow();
   if (FLAG.auto) window.carsi.finished = true;
 }
 
 /* ---------- level flow ---------- */
+let LAST_RESULT = null;   // the finished level's stars and numbers, so the result card can be redrawn on a language switch
 function startLevel(i) {
   if (!unlocked(i)) { toast(tx('locked'), 'bad'); return; }
   AUDIO.start();
@@ -1604,6 +1870,7 @@ function openTitle() {
   LI = 0;
   buildLevel(LEVELS[0]);
   el('hud').hidden = true; el('touch').hidden = true; el('foot').hidden = false;
+  el('notebook').hidden = true;
   renderTitleBest();
   show('scTitle');
   focusFirst('scTitle');
@@ -1644,7 +1911,14 @@ function finishLevel() {
   const n = stars.filter(Boolean).length;
   const prev = BESTLV[LI];
   const record = !!prev && (n > prev.stars || (n === prev.stars && r.time < prev.time));
-  if (!prev || record) { BESTLV[LI] = { stars: n, time: r.time, lok: r.lok, falls: r.falls }; persistBest(); }
+  // gate splits: this run's gate delta for the result card, and the best (earliest) time at each gate for the level
+  r.gates = W.checks.map((c, i) => (L.splits[i] == null ? null : L.splits[i] - c.target));
+  const pre = (prev && prev.splits) || [];
+  const splits = L.splits.map((t, i) => (t == null ? (pre[i] == null ? null : pre[i]) : (pre[i] == null ? t : Math.min(t, pre[i]))));
+  const base = !prev || record ? { stars: n, time: r.time, lok: r.lok, falls: r.falls } : prev;
+  BESTLV[LI] = Object.assign({}, base, { splits });
+  persistBest();
+  LAST_RESULT = { stars, r: Object.assign(r, { record }) };
   DONE[LI] = true;
   persistProgress();
   renderHudStars();
@@ -1656,7 +1930,7 @@ function finishLevel() {
   setTimeout(() => {
     if (mode !== 'catch') return;
     mode = 'result';
-    showResult(stars, Object.assign(r, { record }));
+    showResult(stars, LAST_RESULT.r);
     if (FLAG.auto) setTimeout(() => { if (mode === 'result') nextLevel(); }, 1200);
   }, 1500);
 }
@@ -1697,7 +1971,7 @@ function applyLanguage() {
   syncSettings();
   if (mode === 'title') renderTitleBest();
   if (mode === 'map') renderMap();
-  if (mode === 'result' && L) showResult(starsOf({ time: L.time, par: L.par, lok: L.lokGot, lokTotal: L.lokTotal, falls: L.falls, done: true }), { time: L.time, par: L.par, lok: L.lokGot, lokTotal: L.lokTotal, falls: L.falls, done: true, record: false });
+  if (mode === 'result' && LAST_RESULT) showResult(LAST_RESULT.stars, LAST_RESULT.r);
 }
 function setLang(l) { S.lang = l; persistSettings(); applyLanguage(); }
 function toggleLang() { setLang(S.lang === 'tr' ? 'en' : 'tr'); }
@@ -1828,6 +2102,7 @@ function frame(now) {
     P.anim += dt * 2;
   }
   updateCamera(dt);
+  updateHints(dt);
   frameVisuals(dt, now);
   updateParticles(dt);
   renderer.render(scene, camera);
@@ -1858,6 +2133,12 @@ window.carsi = {
   get falls() { return L ? L.falls : 0; },
   get stars() { return L ? starsOf({ time: L.time, par: L.par, lok: L.lokGot, lokTotal: L.lokTotal, falls: L.falls }) : [false, false, false]; },
   get done() { return DONE.slice(); },
+  get signs() { return SIGNS.slice(); },
+  get lead() { return L ? +L.lead.toFixed(2) : null; },
+  get flow() { return L ? +L.flow.toFixed(2) : 0; },
+  get splits() { return L ? L.splits.slice() : []; },
+  get seen() { return Object.assign({}, SAVE.seen); },
+  get goalZ() { return W && W.goal ? W.goal.z : null; },
   get player() { return { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), vx: +P.vx.toFixed(2), vy: +P.vy.toFixed(2), vz: +P.vz.toFixed(2), grounded: P.grounded, dead: P.dead > 0, rope: !!P.rope }; },
   get surfacesLoaded() { return SURF.length; },
   get catZ() { return L ? +L.catZ.toFixed(1) : null; },
@@ -1879,6 +2160,7 @@ window.carsiSim = carsiSim;
 /* ---------- boot ---------- */
 resize();
 applyQuality();
+document.querySelectorAll('.mascot').forEach(img => { if (FLAG.noassets) img.removeAttribute('src'); else img.onerror = () => { img.hidden = true; }; });
 applyLanguage();
 soundIcon();
 openTitle();
