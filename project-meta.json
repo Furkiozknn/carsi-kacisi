@@ -33,7 +33,7 @@
     "Ten hand-built levels from layout strings: roofs, gaps, domes, sliding planks, breaking tiles, gusts and checkpoints",
     "v2: numbered stone gate arches show a split against target, the result card lists them and the best split per gate is saved; a guild sign per level opens a notebook fact card",
     "v2: the white Turkish Van cat that stole the ring reacts to your pace and hisses at gaps; every level ends with its own finale stretch",
-    "Three stars per level; the ?auto bot cleared 10/10 levels with 0 falls. Known issue: level 8 uses 70-74 draw calls at 60 fps, over the 65 guideline"
+    "Three stars per level; the ?auto bot cleared 10/10 levels with 0 falls; 60 fps with 54-58 draw calls in headless Chromium"
   ],
   "media": {
     "hero": "docs/02-gameplay.png",

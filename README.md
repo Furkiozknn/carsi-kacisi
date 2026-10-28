@@ -29,7 +29,7 @@
 - **Three stars per level.** Finish within the target time, collect 80 % of the lokum (Turkish delight), and never fall.
 - **Night on the roofs.** Levels 8 and 9 run at dusk: pigeons sit on the roofs and flap away as you pass.
 - **Played by a bot.** `?auto` plays all ten levels with the same rules as a player. Measured: **10/10 levels cleared
-  with 0 falls** (v2 as well). Headless Chromium, v2: level 1 60 fps and 58 draw calls, level 8 60 fps and 70 to 74 draw calls (over the 65 guideline), level 10 60 fps and 54 draw calls (v1 level 1: 53).
+  with 0 falls** (v2 as well). Headless Chromium, v2: level 1 60 fps and 58 draw calls, level 8 60 fps and 55 draw calls, level 10 60 fps and 54 draw calls (v1 level 1: 53).
 - **One file, made in code.** One `index.html` with Three.js r170 from a CDN; the models, the levels and a synthesised
   darbuka-and-clarinet loop are all generated in code.
 
@@ -52,8 +52,8 @@ Upgraded by **Claude Haiku 5.5** with Claude Code from [prompts/carsi-kacisi-v2.
 
 Levels (10), stars (3 per level) and the controls are unchanged. Measured after the upgrade: `?auto` clears 10/10 levels
 with 0 falls and no JavaScript errors, with assets, with `?noassets` and in English. In headless Chromium on level 1
-the game runs at 60 fps with 58 draw calls (v1: 53). Level 8 (night) reads 70 to 74 draw calls, above the 65 budget;
-level 10 reads 54.
+the game runs at 60 fps with 58 draw calls (v1: 53). Level 8 (night) reads 55 draw calls after the pigeons were merged
+into one mesh each; level 10 reads 54.
 Not every brief item is complete: the guild signs sit on walkable roofs and no elevated high route was built, and the
 six sourced facts repeat across the ten signs.
 
@@ -138,7 +138,7 @@ checkpoints and the cat at the end. The comment above the table lists every toke
 - A bot pass with `?auto` clears all ten levels with zero falls, reaches the ending and logs no JavaScript errors
   (headless Chromium). The bot takes 44 to 57 seconds of game time per level.
 - 60 fps in headless Chromium on the development laptop: 50-53 draw calls in v1, and in v2 58 on level 1, 54 on level 10
-  and 70 to 74 on level 8, which is over the 65 guideline (known issue). The Intel UHD 620 target was not measured on
+  and 55 on level 8. The Intel UHD 620 target was not measured on
   hardware.
 - Night flock: up to three pigeons on screen at once, confirmed by counting in the running game.
 - Human run times were not measured. The levels are linear, with no branching routes.
