@@ -18,6 +18,10 @@
 
 <p align="center"><b>Play online: <a href="https://furkiozknn.github.io/carsi-kacisi/">https://furkiozknn.github.io/carsi-kacisi/</a></b> (desktop and phone, no install)</p>
 
+<!-- portals:start -->
+<p align="center">Also on: <a href="https://furkiozknn.itch.io/carsi-kacisi">itch.io</a> &middot; <a href="https://playgama.ai/play/yda5hyipnkrzqf">Playgama</a></p>
+<!-- portals:end -->
+
 ## Highlights
 
 - **Rooftop parkour.** Run along the roofs, jump and jump again in the air once, slide down the far side of a dome (it
