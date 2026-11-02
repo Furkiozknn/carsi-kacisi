@@ -37,6 +37,15 @@
 - **One file, made in code.** One `index.html` with Three.js r170 from a CDN; the models, the levels and a synthesised
   darbuka-and-clarinet loop are all generated in code.
 
+## Redesign (2026-11)
+
+Art direction: cel-shaded rooftop look with a three-step toon ramp, ink outlines on the runner, the cat, the domes and the arches, a dusk sky, saffron awnings and spice-red bunting. The UI is a comic paper skin with chunky outlines.
+
+- **What changed:** toon materials and inverted-hull outlines, dusk sky and fog, bunting and awning colour, speed FOV on the chase camera, comic panels and buttons on every screen.
+- **What stayed:** levels, stars, controls, physics, the bot, saves, flags, the v2 features (hints, Van cat, gates, guild signs, finales).
+- **Measured (headless Chromium, 1280x720):** `?auto` clears 10/10 levels with 0 JavaScript errors, with assets and with `?noassets`. Draw calls after the redesign: level 1 58, level 8 56, level 10 52 (limit about 65). Headless fps 60 on this laptop, not measured on the UHD 620 itself.
+- **Not done:** the night screenshot (`docs/06-night.png`) still shows the v2 build; no side-by-side before/after image was made.
+
 ## v2 update
 
 Upgraded by **Claude Haiku 5.5** with Claude Code from [prompts/carsi-kacisi-v2.md](prompts/carsi-kacisi-v2.md).

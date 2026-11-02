@@ -15,145 +15,153 @@
 <meta name="twitter:card" content="summary_large_image">
 <style>
 :root{
-  --bg:#cfe6ee; --ink:#f3fbfa; --ink2:#bfe0dc; --teal:#0F766E; --teal2:#2dd4bf; --gold:#E8B04B; --red:#B42318;
-  --glass:rgba(14,42,48,.58); --glass2:rgba(14,42,48,.80); --line:rgba(255,255,255,.18);
+  --ink:#24140a; --ink2:#5a3a20; --paper:#fff3d6; --paper2:#f9dc9f; --line:#24140a;
+  --saffron:#F4A300; --saffron2:#ffc23d; --spice:#C1272D; --teal:#0F766E; --teal2:#2dd4bf; --gold:#F4A300;
   --sa-t:env(safe-area-inset-top,0px); --sa-b:env(safe-area-inset-bottom,0px);
+  --shadow:4px 5px 0 var(--line);
+  --comic:"Arial Black","Segoe UI Black","Trebuchet MS",Impact,system-ui,sans-serif;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --glass:rgba(4,20,24,.66); --glass2:rgba(4,20,24,.86); } }
-:root[data-theme="dark"]{ --glass:rgba(4,20,24,.66); --glass2:rgba(4,20,24,.86); }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+html,body{margin:0;height:100%;overflow:hidden;background:#f4a878;color:var(--ink);
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-tap-highlight-color:transparent;
   touch-action:none;user-select:none;-webkit-user-select:none}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
 [hidden]{display:none!important}
 button{font:inherit;color:inherit;cursor:pointer}
-:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+:focus-visible{outline:3px dashed var(--teal);outline-offset:3px}
 svg{display:block;fill:currentColor}
-.glass{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);
-  border-radius:16px;box-shadow:0 10px 32px rgba(0,0,0,.35)}
+/* comic panel: paper fill, chunky ink outline, hard offset shadow */
+.glass{background:var(--paper);border:3px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
 
 /* top bar */
-.topbar{position:fixed;top:calc(8px + var(--sa-t));left:8px;right:8px;min-height:56px;display:flex;align-items:center;gap:8px;padding:4px 8px;z-index:20}
-.brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--gold);white-space:nowrap;font-family:Georgia,"Times New Roman",serif}
-.brand span{font-size:16px;letter-spacing:.02em}
-.brand svg{width:30px;height:30px}
-.stats{flex:1;display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink2);min-width:0}
-.stats b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.topbar{position:fixed;top:calc(8px + var(--sa-t));left:8px;right:8px;min-height:58px;display:flex;align-items:center;gap:8px;padding:4px 8px;z-index:20}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--comic);font-weight:900;color:var(--spice);white-space:nowrap}
+.brand span{font-size:15px;letter-spacing:.02em;text-transform:uppercase}
+.brand svg{width:34px;height:34px;filter:drop-shadow(2px 2px 0 var(--line))}
+.stats{flex:1;display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;font-weight:700;color:var(--ink2);min-width:0}
+.stats b{color:var(--ink);font-weight:900;font-variant-numeric:tabular-nums}
 .stat{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.stat svg{width:20px;height:20px}
+.stat svg{width:22px;height:22px;filter:drop-shadow(1px 1.5px 0 var(--line))}
 .stars{display:inline-flex;gap:2px}
-.stars svg{width:18px;height:18px;color:rgba(255,255,255,.22)}
-.stars svg.on{color:var(--gold)}
-.acts{display:flex;gap:2px}
-.ibtn{width:44px;height:44px;border-radius:12px;border:1px solid transparent;background:transparent;display:inline-flex;align-items:center;
-  justify-content:center;color:var(--ink);font-weight:700;font-size:13px}
-.ibtn:hover{background:rgba(255,255,255,.1);border-color:var(--line)}
+.stars svg{width:20px;height:20px;color:#e3cfa3;filter:drop-shadow(0 1.5px 0 var(--line))}
+.stars svg.on{color:var(--saffron)}
+.acts{display:flex;gap:4px}
+.ibtn{width:44px;height:44px;border-radius:10px;border:2.5px solid var(--line);background:var(--paper2);display:inline-flex;align-items:center;
+  justify-content:center;color:var(--ink);font-family:var(--comic);font-weight:900;font-size:12px;box-shadow:2px 3px 0 var(--line)}
+.ibtn:hover{background:var(--saffron2)}
+.ibtn:active{transform:translate(2px,2px);box-shadow:none}
 .ibtn svg{width:24px;height:24px}
 
-/* toasts */
-#toasts{position:fixed;top:calc(74px + var(--sa-t));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;
+/* toasts: comic speech bubbles */
+#toasts{position:fixed;top:calc(82px + var(--sa-t));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;
   align-items:center;z-index:25;pointer-events:none;width:min(92vw,420px)}
-.toast{padding:8px 14px;border-radius:12px;background:var(--glass2);border:1px solid var(--line);font-size:14px;color:var(--ink);
-  animation:tin .25s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.3)}
-.toast.good{border-color:rgba(45,212,191,.6)}
-.toast.bad{border-color:rgba(248,113,113,.7)}
-.toast.info{border-color:rgba(232,176,75,.6)}
-@keyframes tin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.toast{padding:8px 14px;border-radius:12px;background:var(--paper);border:3px solid var(--line);font-size:14px;font-weight:800;color:var(--ink);
+  animation:tin .25s ease-out;box-shadow:3px 4px 0 var(--line)}
+.toast.good{background:#c9f0e6}
+.toast.bad{background:#ffd0c4}
+.toast.info{background:#ffe7a8}
+@keyframes tin{from{opacity:0;transform:translateY(-6px) scale(.96)}to{opacity:1;transform:none}}
 
-/* screens */
+/* screens: halftone dots over a dusk wash, so the 3D scene stays visible behind the panels */
 .screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(16px + var(--sa-t)) 16px calc(16px + var(--sa-b));
-  z-index:30;background:linear-gradient(180deg,rgba(6,30,36,.25),rgba(6,30,36,.55));overflow-y:auto}
-.card{width:100%;max-width:460px;background:var(--glass2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 14px 40px rgba(0,0,0,.45);text-align:center}
-.card h1,.card h2{font-family:Georgia,"Times New Roman",serif;color:var(--gold);margin:6px 0 4px;letter-spacing:.02em}
-.card h1{font-size:34px;line-height:1.1}
-.card h2{font-size:26px}
-.sub{color:var(--ink);font-size:15px;margin:0 0 10px}
-.how{color:var(--ink2);font-size:14px;line-height:1.5;margin:0 0 14px}
-.keys{color:var(--ink2);font-size:12px;line-height:1.5;margin:0 0 14px;opacity:.9}
-.logo{width:96px;height:96px;margin:0 auto}
-.col{display:flex;flex-direction:column;gap:10px}
-.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.btn{min-height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.1);
-  color:var(--ink);font-weight:700;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1 1 auto}
-.btn:hover{background:rgba(255,255,255,.16)}
-.btn.pri{background:var(--teal);border-color:transparent;color:#fff}
-.btn.pri:hover{background:#0d8a80}
+  z-index:30;background:radial-gradient(rgba(36,20,10,.22) 1.4px,transparent 1.6px) 0 0/12px 12px,linear-gradient(180deg,rgba(52,63,154,.42),rgba(232,119,92,.5));overflow-y:auto}
+.card{width:100%;max-width:470px;background:var(--paper);border:4px solid var(--line);border-radius:20px;padding:22px;box-shadow:8px 9px 0 var(--line);text-align:center}
+.screen>.card{margin:auto}
+.card h1,.card h2{font-family:var(--comic);color:var(--spice);margin:6px 0 4px;letter-spacing:.01em;text-transform:uppercase;text-shadow:3px 3px 0 var(--saffron)}
+.card h1{font-size:33px;line-height:1.05}
+.card h2{font-size:25px}
+.sub{color:var(--ink);font-size:15px;font-weight:800;margin:0 0 10px}
+.how{color:var(--ink2);font-size:14px;line-height:1.5;margin:0 0 14px;font-weight:600}
+.keys{color:var(--ink2);font-size:12px;line-height:1.5;margin:0 0 14px;font-weight:600}
+.logo{width:96px;height:96px;margin:0 auto;filter:drop-shadow(3px 4px 0 var(--line))}
+.col{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{min-height:50px;padding:0 18px;border-radius:14px;border:3px solid var(--line);background:var(--paper2);color:var(--ink);
+  font-family:var(--comic);font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:.02em;display:inline-flex;align-items:center;
+  justify-content:center;gap:8px;flex:1 1 auto;box-shadow:0 5px 0 var(--line);transition:transform .08s,box-shadow .08s,background .15s}
+.btn:hover{background:var(--saffron2)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--line)}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:0 5px 0 var(--line)}
+.btn.pri{background:var(--saffron)}
+.btn.pri:hover{background:#ffb820}
 .btn.sm{min-height:44px;font-size:14px;padding:0 12px}
 .btn svg{width:20px;height:20px}
-.best{font-size:14px;color:var(--ink2);margin:12px 0 0}
-.best b{color:var(--gold)}
-.foot{position:fixed;left:0;right:0;bottom:calc(6px + var(--sa-b));text-align:center;font-size:12px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);z-index:12;pointer-events:none}
-.foot a{color:var(--gold);pointer-events:auto}
+.best{font-size:14px;color:var(--ink);font-weight:800;margin:14px 0 0}
+.best b{color:var(--spice);font-family:var(--comic)}
+.foot{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(8px + var(--sa-b));text-align:center;font-size:12px;font-weight:800;
+  color:var(--ink);background:var(--paper);border:2.5px solid var(--line);border-radius:999px;padding:4px 12px;white-space:nowrap;
+  box-shadow:2px 3px 0 var(--line);z-index:12;pointer-events:none}
+.foot a{color:var(--spice);pointer-events:auto}
 
-/* map */
-.mapbox{position:relative;width:100%;aspect-ratio:4/3;max-height:52vh;margin:8px 0 6px;border-radius:14px;overflow:hidden;
-  background:linear-gradient(160deg,#e9d7b2,#cdb48a);border:1px solid rgba(255,255,255,.35)}
+/* map: a painted bazaar plan with stamped level nodes */
+.mapbox{position:relative;width:100%;aspect-ratio:4/3;max-height:52vh;margin:10px 0 8px;border-radius:14px;overflow:hidden;
+  background:#f6d59a radial-gradient(rgba(36,20,10,.12) 1.2px,transparent 1.4px) 0 0/14px 14px;border:3px solid var(--line);box-shadow:4px 5px 0 var(--line)}
 .mapbox svg.route{position:absolute;inset:0;width:100%;height:100%}
-.node{position:absolute;transform:translate(-50%,-50%);width:50px;height:50px;border-radius:50%;border:3px solid #7a6548;
-  background:#c7b08a;color:#2b2119;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.25)}
-.node.open{background:var(--teal);color:#fff;border-color:#0a4f49}
-.node.done{background:var(--gold);color:#2b2119;border-color:#8a5d12}
-.node.cur{box-shadow:0 0 0 4px rgba(45,212,191,.5),0 4px 10px rgba(0,0,0,.25)}
-.node:disabled{cursor:not-allowed;opacity:.85}
-.node small{position:absolute;top:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:700;
-  color:#2b2119;background:rgba(255,255,255,.7);border-radius:6px;padding:1px 5px;margin-top:4px}
-.node .mini{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);display:flex;gap:1px}
-.node .mini svg{width:11px;height:11px;color:#8a6a1e}
-.node .mini svg.off{color:rgba(0,0,0,.2)}
+.node{position:absolute;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;border:3px solid var(--line);
+  background:var(--paper2);color:var(--ink);font-family:var(--comic);font-weight:900;font-size:18px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 var(--line)}
+.node.open{background:var(--teal);color:#fff}
+.node.done{background:var(--saffron);color:var(--ink)}
+.node.cur{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--spice),0 4px 0 var(--line)}
+.node:disabled{cursor:not-allowed;opacity:.8}
+.node small{position:absolute;top:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:system-ui,sans-serif;font-size:11px;font-weight:800;
+  color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:6px;padding:0 5px;margin-top:6px}
+.node .mini{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);display:flex;gap:1px}
+.node .mini svg{width:12px;height:12px;color:var(--saffron);filter:drop-shadow(0 1px 0 var(--line))}
+.node .mini svg.off{color:#d9c49b;filter:none}
 
 /* result */
-.stars-big{display:flex;gap:10px;justify-content:center;margin:6px 0 10px}
-.stars-big svg{width:46px;height:46px;color:rgba(255,255,255,.2)}
-.stars-big svg.on{color:var(--gold)}
-.stats-list{list-style:none;padding:0;margin:0 0 12px;text-align:left;font-size:15px;color:var(--ink2)}
-.stats-list li{display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid var(--line)}
+.stars-big{display:flex;gap:10px;justify-content:center;margin:6px 0 12px}
+.stars-big svg{width:50px;height:50px;color:#e3cfa3;filter:drop-shadow(0 4px 0 var(--line))}
+.stars-big svg.on{color:var(--saffron)}
+.stats-list{list-style:none;padding:0;margin:0 0 12px;text-align:left;font-size:15px;color:var(--ink2);font-weight:800}
+.stats-list li{display:flex;justify-content:space-between;padding:7px 2px;border-bottom:2px dashed var(--line)}
 .stats-list b{color:var(--ink);font-variant-numeric:tabular-nums}
-.newrec{display:inline-block;color:#1b1407;background:var(--gold);border-radius:999px;padding:4px 12px;font-weight:800;font-size:13px;margin-bottom:6px}
+.newrec{display:inline-block;color:var(--paper);background:var(--spice);border:2.5px solid var(--line);border-radius:999px;padding:4px 14px;
+  font-family:var(--comic);font-weight:900;font-size:13px;margin-bottom:6px;transform:rotate(-3deg);box-shadow:2px 3px 0 var(--line)}
 
 /* settings */
-.set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);text-align:left;font-size:15px}
-.set-row input[type=range]{flex:1 1 150px;max-width:200px;accent-color:var(--teal2);min-height:44px}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:2px dashed var(--line);text-align:left;font-size:15px;font-weight:800}
+.set-row input[type=range]{flex:1 1 150px;max-width:200px;accent-color:var(--spice);min-height:44px}
 .seg{display:flex;gap:6px}
-.seg .btn{min-height:44px;flex:0 0 auto;padding:0 12px}
-.seg .btn[aria-pressed="true"]{background:var(--teal);border-color:transparent;color:#fff}
+.seg .btn{min-height:44px;flex:0 0 auto;padding:0 12px;font-size:14px}
+.seg .btn[aria-pressed="true"]{background:var(--teal);color:#fff}
 
-/* touch */
+/* touch: paper stick and stamped buttons */
 #touch{position:fixed;left:0;right:0;bottom:0;height:42vh;z-index:15;pointer-events:none}
 #stick{position:absolute;left:calc(14px + var(--sa-t));bottom:calc(24px + var(--sa-b));width:132px;height:132px;border-radius:50%;
-  background:rgba(14,42,48,.35);border:2px solid rgba(255,255,255,.35);pointer-events:auto;touch-action:none}
-#stick i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(45,212,191,.7)}
-.tbtn{position:absolute;right:16px;width:76px;height:76px;border-radius:50%;border:2px solid rgba(255,255,255,.4);
-  background:rgba(14,42,48,.45);color:#fff;font-weight:800;font-size:14px;pointer-events:auto;touch-action:none}
+  background:var(--paper);border:3px solid var(--line);box-shadow:3px 5px 0 var(--line);opacity:.92;pointer-events:auto;touch-action:none}
+#stick i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--saffron);border:3px solid var(--line)}
+.tbtn{position:absolute;right:16px;width:76px;height:76px;border-radius:50%;border:3px solid var(--line);background:var(--paper2);color:var(--ink);
+  font-family:var(--comic);font-weight:900;font-size:15px;box-shadow:0 5px 0 var(--line);pointer-events:auto;touch-action:none}
 #tJump{bottom:calc(24px + var(--sa-b))}
 #tSlide{bottom:calc(110px + var(--sa-b));width:64px;height:64px;right:22px}
-.tbtn:active{background:rgba(45,212,191,.6)}
+.tbtn:active{background:var(--saffron);transform:translateY(3px);box-shadow:0 2px 0 var(--line)}
 
 #dbg{position:fixed;left:8px;bottom:8px;z-index:40;margin:0;padding:6px 8px;font:12px/1.4 Consolas,monospace;color:#d6ffe9;
   background:rgba(0,0,0,.6);border-radius:8px;max-width:70vw;white-space:pre-wrap;pointer-events:none}
 
 /* first-encounter hint (follows its obstacle), notebook card (guild signs), result and ending mascot */
-.hint{position:fixed;left:0;top:0;z-index:18;pointer-events:none;transform:translate(-50%,-100%);padding:6px 10px;border-radius:10px;
-  background:var(--glass2);border:1px solid rgba(232,176,75,.6);font-size:13px;color:var(--ink);white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.3);animation:tin .25s ease-out}
-.notebook{position:fixed;left:50%;top:calc(74px + var(--sa-t));transform:translateX(-50%);z-index:24;pointer-events:none;width:min(92vw,420px);
-  padding:10px 14px;border-radius:14px;background:var(--glass2);border:1px solid var(--line);font-size:14px;line-height:1.45;color:var(--ink2);
-  animation:tin .3s ease-out;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-.notebook h3{margin:0 0 4px;font-family:Georgia,"Times New Roman",serif;color:var(--gold);font-size:15px}
+.hint{position:fixed;left:0;top:0;z-index:18;pointer-events:none;transform:translate(-50%,-100%);padding:6px 12px;border-radius:12px;
+  background:var(--paper);border:3px solid var(--line);font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap;box-shadow:3px 4px 0 var(--line);animation:tin .25s ease-out}
+.notebook{position:fixed;left:50%;top:calc(82px + var(--sa-t));transform:translateX(-50%);z-index:24;pointer-events:none;width:min(92vw,420px);
+  padding:10px 14px;border-radius:14px;background:var(--paper);border:3px solid var(--line);font-size:14px;line-height:1.45;font-weight:600;color:var(--ink2);
+  animation:tin .3s ease-out;box-shadow:5px 6px 0 var(--line)}
+.notebook h3{margin:0 0 4px;font-family:var(--comic);color:var(--spice);font-size:14px;text-transform:uppercase}
 .notebook p{margin:0}
-.mascot{display:block;height:92px;width:auto;margin:6px auto 0}
+.mascot{display:block;height:92px;width:auto;margin:6px auto 0;filter:drop-shadow(3px 4px 0 var(--line))}
 
 @media (max-width:640px){
-  .topbar{top:calc(6px + var(--sa-t));left:6px;right:6px;min-height:50px;gap:6px}
+  .topbar{top:calc(6px + var(--sa-t));left:6px;right:6px;min-height:52px;gap:6px}
   .brand span{display:none}
   .stats{gap:8px;font-size:13px}
   .stat svg{width:18px;height:18px}
   .card{padding:18px}
-  .card h1{font-size:28px}
+  .card h1{font-size:27px}
 }
 @media (max-height:500px){
   .card{padding:12px}
-  .card h1{font-size:24px}
+  .card h1{font-size:23px}
   .logo{width:64px;height:64px}
   .how,.keys{margin-bottom:8px}
   .btn{min-height:44px}
@@ -495,9 +503,9 @@ const SKY_R = 360;
 const skyMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false });
 const sky = new THREE.Mesh(new THREE.SphereGeometry(SKY_R, 24, 16), skyMat);
 scene.add(sky);
-// late-afternoon day: saturated blue zenith, warm haze at the horizon; dusk night: deep blue with a warm horizon
+// day levels read as dusk: indigo zenith, coral middle, saffron horizon; the night levels keep their own sky
 const PAL = {
-  day: { top: 0x2a72cc, mid: 0x7fc4f0, hor: 0xffe2ad, fog: 0xf6dcae, sun: 0xffe9bd, sunI: 2.6, hemi: 1.05 },
+  day: { top: 0x2f3f9a, mid: 0xe8775c, hor: 0xffc88a, fog: 0xf2a478, sun: 0xffdca8, sunI: 2.4, hemi: 1.05 },
   night: { top: 0x070d24, mid: 0x18275a, hor: 0x6b4f7e, fog: 0x4a3c6e, sun: 0xffb27a, sunI: 0.9, hemi: 0.8 },
   dusk: { top: 0x3b4f9c, mid: 0xe89a6a, hor: 0xffc27a, fog: 0xe5a57a, sun: 0xffb070, sunI: 2.2, hemi: 1.0 }
 };
@@ -531,41 +539,51 @@ const digitAtlas = (() => {
   return new THREE.CanvasTexture(c);
 })();
 
+/* ---------- cel shading: a three-step ramp, so lit, mid and shadow faces read as flat bands ---------- */
+const RAMP = new THREE.DataTexture(new Uint8Array([120, 190, 255]), 3, 1, THREE.RedFormat);
+RAMP.minFilter = RAMP.magFilter = THREE.NearestFilter; RAMP.generateMipmaps = false; RAMP.needsUpdate = true;
+const toon = o => new THREE.MeshToonMaterial(Object.assign({ gradientMap: RAMP }, o));
+
 /* ---------- shared materials and primitive geometry ---------- */
 const M = {
-  vc: new THREE.MeshLambertMaterial({ vertexColors: true }),
-  wood: new THREE.MeshLambertMaterial({ color: 0x9a6a3a }),
-  tile: new THREE.MeshLambertMaterial({ color: 0x2a8a8f }),
-  crack: new THREE.MeshLambertMaterial({ color: 0xb8694a }),
-  lok: new THREE.MeshLambertMaterial({ color: 0xf7b6c8 }),
-  tunic: new THREE.MeshLambertMaterial({ color: 0x0F766E }),
-  skin: new THREE.MeshLambertMaterial({ color: 0xc98f63 }),
-  fez: new THREE.MeshLambertMaterial({ color: 0xB42318 }),
-  pants: new THREE.MeshLambertMaterial({ color: 0x3b3a4a }),
-  cat: new THREE.MeshLambertMaterial({ color: 0xa4502a }),          // auburn: tail and ear patches of the Turkish Van
-  catW: new THREE.MeshLambertMaterial({ color: 0xf4ead8 }),
-  gold: new THREE.MeshLambertMaterial({ color: 0xE8B04B, emissive: 0x4a2c00 }),
-  bird: new THREE.MeshLambertMaterial({ color: 0x7d8aa0 }),
-  birdW: new THREE.MeshLambertMaterial({ color: 0xe9edf2 }),
-  water: new THREE.MeshLambertMaterial({ color: 0x3f8fa8 }),
-  street: new THREE.MeshLambertMaterial({ color: 0x6d5d4c }),
-  roofField: new THREE.MeshLambertMaterial({ color: 0xc9ad86 }),
-  leadI: new THREE.MeshLambertMaterial({ color: 0xffffff }),
+  vc: toon({ vertexColors: true }),
+  wood: toon({ color: 0x9a6a3a }),
+  tile: toon({ color: 0x2a8a8f }),
+  crack: toon({ color: 0xb8694a }),
+  lok: toon({ color: 0xf7b6c8 }),
+  tunic: toon({ color: 0x0F766E }),
+  skin: toon({ color: 0xc98f63 }),
+  fez: toon({ color: 0xB42318 }),
+  pants: toon({ color: 0x3b3a4a }),
+  cat: toon({ color: 0xa4502a }),          // auburn: tail and ear patches of the Turkish Van
+  catW: toon({ color: 0xf4ead8 }),
+  gold: toon({ color: 0xE8B04B, emissive: 0x4a2c00 }),
+  bird: toon({ color: 0x7d8aa0 }),
+  birdW: toon({ color: 0xe9edf2 }),
+  water: toon({ color: 0x3f8fa8 }),
+  street: toon({ color: 0x6d5d4c }),
+  roofField: toon({ color: 0xc9ad86 }),
+  leadI: toon({ color: 0xffffff }),
   glow: new THREE.PointsMaterial({ size: 2.6, color: 0xffc070, map: null, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true }),
   moon: new THREE.MeshBasicMaterial({ color: 0xfff4d6, fog: false }),
-  shutter: new THREE.MeshLambertMaterial({ color: 0x0F766E }),
-  pot: new THREE.MeshLambertMaterial({ color: 0x9a5530 }),
-  leaf: new THREE.MeshLambertMaterial({ color: 0x3f8a4a }),
-  birdVC: new THREE.MeshLambertMaterial({ vertexColors: true }),   // merged pigeons: body, head and wings in vertex colours
+  shutter: toon({ color: 0x0F766E }),
+  pot: toon({ color: 0x9a5530 }),
+  leaf: toon({ color: 0x3f8a4a }),
+  birdVC: toon({ vertexColors: true }),   // merged pigeons: body, head and wings in vertex colours
   sign:new THREE.MeshBasicMaterial({ map: digitAtlas, transparent: true, depthWrite: false, side: THREE.DoubleSide })
 };
 const G = {
-  box: new THREE.BoxGeometry(1, 1, 1),
-  sph: new THREE.SphereGeometry(0.5, 14, 10),
-  cyl: new THREE.CylinderGeometry(0.5, 0.5, 1, 12),
   tor: new THREE.TorusGeometry(0.5, 0.12, 8, 24),
   lok: new THREE.IcosahedronGeometry(0.28, 0)
 };
+function inkMat(thick) {
+  const m = new THREE.MeshBasicMaterial({ color: 0x24140a, side: THREE.BackSide });
+  m.onBeforeCompile = sh => {
+    sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  transformed += normal * ' + thick.toFixed(3) + ';');
+  };
+  return m;
+}
+const INK_CHAR = inkMat(0.05), INK_WORLD = inkMat(0.035);
 // a moon in the night sky; it follows the camera so it never moves away
 const MOON_DIR = new THREE.Vector3(0.12, 0.26, -1).normalize();   // ahead of the runner, above the vanishing point
 const moon = new THREE.Mesh(new THREE.SphereGeometry(9, 20, 14), M.moon);
@@ -649,6 +667,11 @@ function boxG(x0, x1, y0, y1, z0, z1, hex) {
 }
 function blobG(x, y, z, sx, sy, sz, hex) {
   const g = new THREE.SphereGeometry(0.5, 10, 8);
+  g.scale(sx, sy, sz); g.translate(x, y, z);
+  return paint(g, hex);
+}
+function cylG(x, y, z, sx, sy, sz, hex) {
+  const g = new THREE.CylinderGeometry(0.5, 0.5, 1, 12);
   g.scale(sx, sy, sz); g.translate(x, y, z);
   return paint(g, hex);
 }
@@ -1035,6 +1058,9 @@ world.add(player.g, cat.g, ring);
     im.instanceColor.needsUpdate = true;
     scene.add(im);
   }
+  const domeInk = new THREE.InstancedMesh(domes.geometry, INK_WORLD, N);
+  domeInk.instanceMatrix = domes.instanceMatrix;
+  scene.add(domeInk);
   finials.count = nf;
   finials.instanceMatrix.needsUpdate = true;
   if (nf) { finials.instanceColor.needsUpdate = true; scene.add(finials); }
@@ -1074,41 +1100,42 @@ world.add(player.g, cat.g, ring);
   if (g) scene.add(new THREE.Mesh(g, M.vc));
 })();
 
-function part(parent, geo, mat, p, s) {
-  const m = new THREE.Mesh(geo, mat);
-  m.position.set(p[0], p[1], p[2]);
-  if (s) m.scale.set(s[0], s[1], s[2]);
+function pivot(parent, x, y) { const g = new THREE.Group(); g.position.set(x, y, 0); parent.add(g); return g; }
+
+// one vertex-coloured mesh from several pieces, with an ink outline child: one draw call plus its outline
+function inked(parent, pieces, ink) {
+  const geo = mergeGeometries(pieces, false);
+  for (const p of pieces) p.dispose();
+  const m = new THREE.Mesh(geo, M.vc);
   m.castShadow = true;
+  m.add(new THREE.Mesh(geo, ink));
   parent.add(m);
   return m;
 }
-function pivot(parent, x, y) { const g = new THREE.Group(); g.position.set(x, y, 0); parent.add(g); return g; }
-
 function makePlayer() {
   const g = new THREE.Group();
   const body = new THREE.Group(); g.add(body);
-  part(body, G.box, M.tunic, [0, 1.1, 0], [0.52, 0.7, 0.36]);
-  part(body, G.sph, M.skin, [0, 1.66, 0], [0.22, 0.24, 0.22]);
-  part(body, G.cyl, M.fez, [0, 1.87, 0], [0.22, 0.14, 0.22]);
-  const legL = pivot(body, -0.13, 0.78); part(legL, G.box, M.pants, [0, -0.37, 0], [0.16, 0.74, 0.18]);
-  const legR = pivot(body, 0.13, 0.78); part(legR, G.box, M.pants, [0, -0.37, 0], [0.16, 0.74, 0.18]);
-  const armL = pivot(body, -0.36, 1.38); part(armL, G.box, M.tunic, [0, -0.3, 0], [0.14, 0.6, 0.14]);
-  const armR = pivot(body, 0.36, 1.38); part(armR, G.box, M.tunic, [0, -0.3, 0], [0.14, 0.6, 0.14]);
+  inked(body, [boxG(-0.26, 0.26, 0.75, 1.45, -0.18, 0.18, 0x0F766E), blobG(0, 1.66, 0, 0.22, 0.24, 0.22, 0xc98f63), cylG(0, 1.87, 0, 0.22, 0.14, 0.22, 0xB42318)], INK_CHAR);
+  const legL = pivot(body, -0.13, 0.78); inked(legL, [boxG(-0.08, 0.08, -0.74, 0, -0.09, 0.09, 0x3b3a4a)], INK_CHAR);
+  const legR = pivot(body, 0.13, 0.78); inked(legR, [boxG(-0.08, 0.08, -0.74, 0, -0.09, 0.09, 0x3b3a4a)], INK_CHAR);
+  const armL = pivot(body, -0.36, 1.38); inked(armL, [boxG(-0.07, 0.07, -0.6, 0, -0.07, 0.07, 0x0F766E)], INK_CHAR);
+  const armR = pivot(body, 0.36, 1.38); inked(armR, [boxG(-0.07, 0.07, -0.6, 0, -0.07, 0.07, 0x0F766E)], INK_CHAR);
   return { g, body, legL, legR, armL, armR };
 }
 // The thief cat: a white Turkish Van with auburn tail and ear patches. Its head is a pivot, so it can turn to look back.
 function makeCat() {
   const g = new THREE.Group();
   const body = new THREE.Group(); g.add(body);
-  part(body, G.sph, M.catW, [0, 0.42, 0], [0.5, 0.4, 0.86]);
-  part(body, G.sph, M.cat, [0, 0.66, 0.1], [0.3, 0.12, 0.36]);       // auburn saddle on the back
+  const CW = 0xf4ead8, CA = 0xa4502a;
+  // body, saddle and the four legs are one mesh (the legs never move, so they need no pivots)
+  inked(body, [blobG(0, 0.42, 0, 0.5, 0.4, 0.86, CW), blobG(0, 0.66, 0.1, 0.3, 0.12, 0.36, CA),
+    boxG(-0.19, -0.09, 0, 0.28, -0.35, -0.25, CW), boxG(0.09, 0.19, 0, 0.28, -0.35, -0.25, CW),
+    boxG(-0.19, -0.09, 0, 0.28, 0.25, 0.35, CW), boxG(0.09, 0.19, 0, 0.28, 0.25, 0.35, CW)], INK_CHAR);
   const head = new THREE.Group(); head.position.set(0, 0.66, -0.5); body.add(head);
-  part(head, G.sph, M.catW, [0, 0, 0], [0.38, 0.34, 0.38]);
-  part(head, G.sph, M.catW, [0, -0.08, -0.22], [0.2, 0.14, 0.18]);   // muzzle
-  part(head, G.box, M.cat, [-0.12, 0.27, 0], [0.11, 0.2, 0.08]);     // auburn ears
-  part(head, G.box, M.cat, [0.12, 0.27, 0], [0.11, 0.2, 0.08]);
-  const tail = pivot(body, 0, 0.5, 0.4); part(tail, G.box, M.cat, [0, 0.1, 0.3], [0.1, 0.1, 0.7]);
-  for (const [x, z] of [[-0.14, -0.3], [0.14, -0.3], [-0.14, 0.3], [0.14, 0.3]]) part(body, G.box, M.catW, [x, 0.14, z], [0.1, 0.28, 0.1]);
+  inked(head, [blobG(0, 0, 0, 0.38, 0.34, 0.38, CW), blobG(0, -0.08, -0.22, 0.2, 0.14, 0.18, CW),
+    boxG(-0.175, -0.065, 0.17, 0.37, -0.04, 0.04, CA), boxG(0.065, 0.175, 0.17, 0.37, -0.04, 0.04, CA)], INK_CHAR);
+  const tail = pivot(body, 0, 0.5);
+  inked(tail, [boxG(-0.05, 0.05, 0.05, 0.15, -0.05, 0.65, CA)], INK_CHAR);
   g.scale.setScalar(1.9);   // larger so the target reads from the camera
   return { g, body, head, tail };
 }
@@ -1266,12 +1293,27 @@ function buildLevel(def) {
     const awnCol = LK.awn || COL.awn;
     awnAt.forEach(([x, y, z], i) => {
       pos.set(x, y, z); m4.compose(pos, q4, sc); im.setMatrixAt(i, m4);
-      im.setColorAt(i, col.setHex(i % 2 ? 0xf3e6cc : awnCol));
+      im.setColorAt(i, col.setHex(i % 2 ? 0xF4A300 : awnCol));
     });
     im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true;
     world.add(im); cur.meshes.push(im); cur.geo.push(ag);
   }
 
+  // bunting: saffron and spice-red pennants strung across the lane where one roof meets the next
+  const runs = SURF.filter(s => s.t === 'box' && !s.mv && !s.brk);
+  for (let k = 0; k + 1 < runs.length; k++) {
+    const a = runs[k], b = runs[k + 1];
+    const gap = a.z0 - b.z1;   // the gap between the two roofs, in units
+    if (gap < 0 || gap > 4.5) continue;
+    const zc = (a.z0 + b.z1) / 2, h = Math.max(a.top, b.top) + 3.2;
+    statics.push(boxG(-5.6, -2.8, h, h + 0.08, zc - 0.05, zc + 0.05, 0x3b2f2a));
+    statics.push(boxG(-2.8, 2.8, h - 0.3, h - 0.22, zc - 0.05, zc + 0.05, 0x3b2f2a));
+    statics.push(boxG(2.8, 5.6, h, h + 0.08, zc - 0.05, zc + 0.05, 0x3b2f2a));
+    for (let j = 0; j < 5; j++) {
+      const x = -4.2 + j * 2.1;
+      statics.push(boxG(x - 0.35, x + 0.35, h - 1.5, h - 0.6, zc - 0.03, zc + 0.03, j % 2 ? 0xC1272D : 0xF4A300));
+    }
+  }
   // the guild sign: a small board on a post, only while this level's sign is still to be found
   if (W.sign && !SIGNS[LI]) {
     const sg = W.sign;
@@ -1303,6 +1345,8 @@ function buildLevel(def) {
     const m = new THREE.Mesh(merged, M.vc);
     m.castShadow = true; m.receiveShadow = true;
     world.add(m); cur.meshes.push(m); cur.geo.push(merged);
+    const mi = new THREE.Mesh(merged, INK_WORLD);   // ink outline of the whole static world in one draw call
+    world.add(mi); cur.meshes.push(mi);
   }
   for (const g of statics) g.dispose();
   // warm glow around every lantern (one Points object)
@@ -1457,6 +1501,10 @@ function updateCamera(dt) {
   camPos.lerp(tgt, 1 - Math.exp(-9 * dt));
   // look well ahead and only slightly down, so the cat ahead and the minarets stay upright on screen
   camLook.set(P.x - Math.sin(yaw) * 6, P.y + 0.6, P.z - Math.cos(yaw) * 6);
+  // speed FOV: the view widens as the runner speeds up (a fast dome slide reaches the top of the range)
+  const boost = mode === 'play' ? Math.min(1, Math.max(0, (sp - 6) / 5)) : 0;
+  const fovWant = camBaseFov + 9 * boost;
+  if (Math.abs(camera.fov - fovWant) > 0.05) { camera.fov += (fovWant - camera.fov) * (1 - Math.exp(-4 * dt)); camera.updateProjectionMatrix(); }
   camera.position.copy(camPos);
   camera.lookAt(camLook);
 }
@@ -2076,12 +2124,14 @@ addEventListener('pointerup', () => { drag = null; });
   el('tSlide').addEventListener('pointerdown', e => { e.preventDefault(); if (mode === 'play') INPUT.slideQ = true; });
 })();
 
+let camBaseFov = 60;
 addEventListener('resize', resize);
 function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  camera.fov = w / h < 0.8 ? 72 : 60;
+  camBaseFov = w / h < 0.8 ? 72 : 60;
+  camera.fov = camBaseFov;
   camera.updateProjectionMatrix();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
