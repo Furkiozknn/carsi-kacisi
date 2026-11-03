@@ -8,3 +8,4 @@ desktop.ini
 # local test output
 *.log
 node_modules/
+graphify-out/
