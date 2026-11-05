@@ -344,7 +344,7 @@ if (FLAG.low) S.quality = 'low';
 const SAVE = lsGet(KEY.save, {});
 const DONE = Array.from({ length: 10 }, (_, i) => !!(SAVE.done && SAVE.done[i]));
 const SIGNS = Array.from({ length: 10 }, (_, i) => !!(SAVE.signs && SAVE.signs[i]));   // guild sign found per level
-SAVE.seen = SAVE.seen || {};                                                          // first-encounter hints shown
+SAVE.seen = (SAVE.seen && typeof SAVE.seen === 'object') ? SAVE.seen : {};             // first-encounter hints shown
 const BEST = lsGet(KEY.best, {});
 const BESTLV = Array.from({ length: 10 }, (_, i) => (BEST.lv && BEST.lv[i]) || null);
 
@@ -647,8 +647,9 @@ function parseLevel(def) {
   W.checks = W.checks.filter(c => c.z < W.spawn.z - 2);
   // each gate's target time is its share of the par by distance (star rules unchanged)
   W.checks.forEach((c, i) => { c.i = i; c.target = W.par * -c.z / W.len; });
-  // one hidden guild sign on the side of a walkable roof, about halfway along the level
-  const roofs = W.surf.filter(s => s.t === 'box' && !s.mv && !s.brk && s.z1 - s.z0 >= 8);
+  // one hidden guild sign on the side of a walkable roof, about halfway along the level (exclude dome roofs where the mesh buries the sign)
+  const domeZ = new Set(W.surf.filter(s => s.t === 'dome').map(d => d.cz));
+  const roofs = W.surf.filter(s => s.t === 'box' && !s.mv && !s.brk && s.z1 - s.z0 >= 8 && !domeZ.has((s.z0 + s.z1) / 2));
   const sr = roofs[Math.floor(roofs.length / 2)];
   W.sign = sr ? { x: 4.9, y: sr.top, z: (sr.z0 + sr.z1) / 2 } : null;
   return W;
@@ -719,7 +720,7 @@ let mode = 'title';      // title | map | play | pause | result | ending
 const INPUT = { jumpQ: false, slideQ: false, touchX: 0, touchY: 0, drag: 0 };
 let BOT = FLAG.auto;   // ?auto, or window.carsi.setBot(true) from a test
 const KEYS = new Set();
-let camYaw = 0, camManual = 0, camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+let camYaw = 0, camManual = 0, camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), camTgt = new THREE.Vector3();
 
 function approach(v, t, d) { return v < t ? Math.min(t, v + d) : Math.max(t, v - d); }
 
@@ -871,6 +872,13 @@ function kill() {
 
 function respawn() {
   const c = L.respawn;
+  // restore tile if checkpoint sits on a breakable tile so respawn never drops player into a death loop
+  for (const s of SURF) {
+    if (s.brk && c.x >= s.x0 && c.x <= s.x1 && c.z >= s.z0 && c.z <= s.z1) {
+      s.st = 0; s.t0 = 0; s.t1 = 0; s.on = true;
+      if (s.mesh) { s.mesh.visible = true; s.mesh.position.y = 0; s.mesh.material = M.tile; }
+    }
+  }
   P.x = c.x; P.z = c.z; P.y = c.y + 0.6;
   P.vx = 0; P.vy = 0; P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.airJump = 1;
 }
@@ -1369,14 +1377,14 @@ function buildLevel(def) {
       const m = new THREE.Mesh(geo, M.wood);
       m.position.set(0, s.top - 0.25, (s.z0 + s.z1) / 2);
       m.castShadow = true; m.receiveShadow = true;
-      world.add(m); s.mesh = m; cur.geo.push(geo);
+      world.add(m); s.mesh = m; cur.meshes.push(m); cur.geo.push(geo);
     }
     if (s.brk) {
       const geo = new THREE.BoxGeometry(12, 0.5, s.z1 - s.z0);
       const m = new THREE.Mesh(geo, M.tile);
       m.position.set(0, s.top - 0.25, (s.z0 + s.z1) / 2);
       m.castShadow = true; m.receiveShadow = true;
-      world.add(m); s.mesh = m; cur.geo.push(geo);
+      world.add(m); s.mesh = m; cur.meshes.push(m); cur.geo.push(geo);
     }
   }
 
@@ -1451,12 +1459,13 @@ points.frustumCulled = false;
 scene.add(points);
 for (let i = 0; i < PMAX; i++) PP[i * 3 + 1] = -999;
 
+const _pCol = new THREE.Color();
 function spawnP(x, y, z, vx, vy, vz, hex, life, grav) {
   const i = pIdx; pIdx = (pIdx + 1) % PMAX;
-  const c = new THREE.Color(hex);
+  _pCol.setHex(hex);
   PP[i * 3] = x; PP[i * 3 + 1] = y; PP[i * 3 + 2] = z;
   PV[i * 3] = vx; PV[i * 3 + 1] = vy; PV[i * 3 + 2] = vz;
-  PBASE[i * 3] = c.r; PBASE[i * 3 + 1] = c.g; PBASE[i * 3 + 2] = c.b;
+  PBASE[i * 3] = _pCol.r; PBASE[i * 3 + 1] = _pCol.g; PBASE[i * 3 + 2] = _pCol.b;
   PLIFE[i] = life; PMAXL[i] = life; PG[i] = grav;
 }
 const FX = {
@@ -1500,8 +1509,8 @@ function updateCamera(dt) {
   camManual *= Math.exp(-0.7 * dt);
   const yaw = camYaw + camManual;
   const dist = CAM_D * (camera.aspect < 0.8 ? 1.35 : 1);
-  const tgt = new THREE.Vector3(P.x + Math.sin(yaw) * dist, P.y + CAM_H, P.z + Math.cos(yaw) * dist);
-  camPos.lerp(tgt, 1 - Math.exp(-9 * dt));
+  camTgt.set(P.x + Math.sin(yaw) * dist, P.y + CAM_H, P.z + Math.cos(yaw) * dist);
+  camPos.lerp(camTgt, 1 - Math.exp(-9 * dt));
   // look well ahead and only slightly down, so the cat ahead and the minarets stay upright on screen
   camLook.set(P.x - Math.sin(yaw) * 6, P.y + 0.6, P.z - Math.cos(yaw) * 6);
   // speed FOV: the view widens as the runner speeds up (a fast dome slide reaches the top of the range)
@@ -1513,8 +1522,9 @@ function updateCamera(dt) {
 }
 
 function updateSun() {
-  const cx = mode === 'play' || mode === 'pause' || mode === 'result' || mode === 'ending' ? P.x : W.spawn.x;
-  const cz = mode === 'play' || mode === 'pause' || mode === 'result' || mode === 'ending' ? P.z : W.spawn.z;
+  const follow = mode === 'play' || mode === 'pause' || mode === 'catch' || mode === 'result' || mode === 'ending';
+  const cx = follow && P ? P.x : W.spawn.x;
+  const cz = follow && P ? P.z : W.spawn.z;
   sun.target.position.set(cx, 0, cz);
   sun.position.set(cx + 22, 30, cz + 28);
 }
@@ -1682,7 +1692,7 @@ function hintCandidates() {
   return out;
 }
 function updateHints(dt) {
-  if (mode !== 'play') { elHint.hidden = true; hintLeft = 0; return; }
+  if (mode !== 'play') { elHint.hidden = true; if (mode !== 'pause') hintLeft = 0; return; }
   if (hintLeft > 0) {
     hintLeft -= dt;
     const v = hintPos.copy(hintAt).project(camera);
@@ -1765,7 +1775,7 @@ const AUDIO = (() => {
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       applyVolumes();
       timer = setInterval(tick, 40);
-    } catch (e) { ctx = null; }
+    } catch (e) { if (ctx && ctx.close) ctx.close().catch(() => {}); ctx = null; }
   }
   function applyVolumes() {
     if (!ctx) return;
@@ -1956,6 +1966,7 @@ function pauseGame() {
 }
 function resumeGame() {
   if (mode !== 'pause') return;
+  AUDIO.start();
   mode = 'play';
   show(null);
   el('scPause').hidden = true;
