@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
+<meta name="arena-game" content="carsi-kacisi">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Çarşı Kaçışı</title>
 <meta name="description" content="A 3D rooftop runner over the domes of an Istanbul covered bazaar: chase a white Van cat, beat the gate splits, collect lokum. Plays in the browser.">
@@ -154,6 +155,7 @@ svg{display:block;fill:currentColor}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:var(--shadow-btn)}
 .btn.pri{background:var(--saffron);color:var(--ink)}
 .btn.pri:hover:not(:disabled){background:#FFA34D;filter:drop-shadow(0 2px 8px rgba(232,137,51,0.4))}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}
 .btn.sm{min-height:44px;font-size:13.5px;padding:0 14px}
 .btn svg{width:20px;height:20px}
 .best{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:var(--ink2);
@@ -776,9 +778,11 @@ svg{display:block;fill:currentColor}
     <div class="col">
       <button class="btn pri" id="bPlay" data-t="play" disabled></button>
       <button class="btn" id="bCont" data-t="cont" hidden></button>
+      <button class="btn" id="bDaily" data-t="daily"></button>
       <button class="btn" id="bTSettings" data-t="settings"></button>
     </div>
     <p class="best" id="tBest">Yükleniyor… / Loading…</p>
+    <p class="best" id="tDaily"></p>
     <p class="best" id="loadFail" hidden>3D motor yüklenemedi, internet bağlantınızı kontrol edin. / The 3D engine could not load; check your internet connection.</p>
   </div>
 </section>
@@ -826,6 +830,7 @@ svg{display:block;fill:currentColor}
     <div class="set-row"><span data-t="language"></span><div class="seg"><button class="btn sm" id="sTR" aria-pressed="false">TR</button><button class="btn sm" id="sEN" aria-pressed="false">EN</button></div></div>
     <div class="set-row"><span data-t="quality"></span><div class="seg"><button class="btn sm" id="sLow" aria-pressed="false" data-t="low"></button><button class="btn sm" id="sHigh" aria-pressed="false" data-t="high"></button></div></div>
     <div class="set-row"><span data-t="fullscreen"></span><div class="seg"><button class="btn sm" id="sFull" data-t="toggle"></button></div></div>
+    <div class="set-row"><span data-t="a11y"></span><div class="seg"><button class="btn sm" id="sA11y" data-t="a11yOpen"></button></div></div>
     <div class="col" style="margin-top:16px"><button class="btn pri" id="bSetClose" data-t="close"></button></div>
   </div>
 </section>
@@ -846,6 +851,7 @@ svg{display:block;fill:currentColor}
       <div class="row">
         <button class="btn" id="rRetry" data-t="retry"></button>
         <button class="btn" id="rMap" data-t="roofMap"></button>
+        <button class="btn" id="rShare" data-t="share"></button>
       </div>
     </div>
   </div>
@@ -863,6 +869,10 @@ svg{display:block;fill:currentColor}
     <div class="col">
       <button class="btn pri" id="eMenu" data-t="mainMenu"></button>
       <button class="btn" id="eAgain" data-t="again"></button>
+      <div class="row">
+        <button class="btn" id="eShare" data-t="share"></button>
+        <a class="btn" id="eOther" href="https://furkiozknn.github.io/" target="_blank" rel="noopener" data-t="another"></a>
+      </div>
     </div>
   </div>
 </section>
@@ -938,7 +948,10 @@ const TX = {
     keyJump: 'Boşluk', keySlide: 'Shift', keyMove: 'WASD', gate: 'Kapı', fact: 'Biliyor muydun?',
     notebook: 'Lonca defteri', signFound: 'Lonca işareti bulundu', signCount: 'Lonca işaretleri',
     stall: 'Tezgâh', stallHit: 'Tezgâh devrildi! Kedi kayıyor', stallCombo: 'Zincir Tezgâh ×{n}!',
-    hstall: 'Tezgâha çarp: dökülen mallar kediyi yavaşlatır'
+    hstall: 'Tezgâha çarp: dökülen mallar kediyi yavaşlatır',
+    daily: 'Günün Meydan Okuması', dailyLine: 'Günlük seri: {s} gün · en iyi: {b}', dailyDone: 'Bugünkü çatı tamam', dailyLevel: 'Bugünün çatısı: {n}',
+    a11y: 'Erişilebilirlik', a11yOpen: 'Aç', share: 'Paylaş', another: 'Başka oyun',
+    awFirst: 'İlk kedi yakalandı', awAll: '10 çatının hepsi', awStars: '30 yıldızın hepsi'
   },
   en: {
     name: 'Çarşı Kaçışı', sub: 'Run the rooftops, catch the thief cat.',
@@ -966,7 +979,10 @@ const TX = {
     keyJump: 'Space', keySlide: 'Shift', keyMove: 'WASD', gate: 'Gate', fact: 'Did you know?',
     notebook: 'Guild notebook', signFound: 'Guild sign found', signCount: 'Guild signs',
     stall: 'Stalls', stallHit: 'Stall toppled! The cat slips', stallCombo: 'Stall Chain ×{n}!',
-    hstall: 'Run into the stall: spilled goods slow the cat'
+    hstall: 'Run into the stall: spilled goods slow the cat',
+    daily: 'Daily challenge', dailyLine: 'Daily streak: {s} days · best: {b}', dailyDone: 'Today\'s roof is done', dailyLevel: 'Today\'s roof: {n}',
+    a11y: 'Accessibility', a11yOpen: 'Open', share: 'Share', another: 'Another game',
+    awFirst: 'First cat caught', awAll: 'All 10 roofs', awStars: 'All 30 stars'
   }
 };
 const tx = (k, v) => {
@@ -2566,6 +2582,10 @@ function renderTitleBest() {
   const t = el('tBest');
   t.innerHTML = tx('best') + ': <b>' + total + ' / 30</b> · ' + cleared + ' / 10';
   el('bCont').hidden = cleared === 0;
+  if (window.Arena) {
+    const d = Arena.daily();
+    el('tDaily').textContent = tx('dailyLevel', { n: (d.seed % LEVELS.length) + 1 + '. ' + lvName(d.seed % LEVELS.length) }) + ' · ' + (d.done ? tx('dailyDone') + ' · ' : '') + tx('dailyLine', { s: d.streak, b: d.best });
+  } else el('bDaily').hidden = true;
 }
 
 function showResult(stars, r) {
@@ -2585,7 +2605,8 @@ function showResult(stars, r) {
     (gates.length ? '<li class="gates"><span>' + tx('gate') + ' (s)</span><b>' + gates.join(' · ') + '</b></li>' : '');
   el('rMascot').hidden = FLAG.noassets;
   el('rRecord').hidden = !r.record;
-  el('rNext').hidden = LI >= LEVELS.length - 1;
+  el('rNext').hidden = LI >= LEVELS.length - 1 || !!DAILY;
+  if (DAILY && DAILY.rec) el('rSub').textContent = tx('daily') + ' · ' + tx('dailyLine', { s: DAILY.rec.streak, b: DAILY.rec.best });
   el('rNext').textContent = tx('next');
   show('scResult');
   focusFirst('scResult');
@@ -2606,8 +2627,18 @@ function showEnding() {
 
 /* ---------- level flow ---------- */
 let LAST_RESULT = null;   // the finished level's stars and numbers, so the result card can be redrawn on a language switch
-function startLevel(i) {
-  if (!unlocked(i)) { toast(tx('locked'), 'bad'); return; }
+// Daily challenge (arena-kit): the levels are fixed, hand-checked layouts, so the day seed picks today's level for everyone
+// (?d=YYYYMMDD replays a day). It may be a level that is still locked; then beating it does not unlock the next one.
+let DAILY = null;
+function startDaily() {
+  if (!window.Arena) return;
+  const d = Arena.daily(), i = d.seed % LEVELS.length;
+  DAILY = { d, i, wasUnlocked: unlocked(i), rec: null };
+  startLevel(i, true);
+}
+function startLevel(i, keepDaily) {
+  if (!keepDaily) DAILY = null;
+  if (!DAILY && !unlocked(i)) { toast(tx('locked'), 'bad'); return; }
   AUDIO.start();
   LI = i;
   buildLevel(LEVELS[i]);
@@ -2676,10 +2707,16 @@ function finishLevel() {
   BESTLV[LI] = Object.assign({}, base, { splits });
   persistBest();
   LAST_RESULT = { stars, r: Object.assign(r, { record }) };
-  DONE[LI] = true;
+  if (!DAILY || DAILY.wasUnlocked) DONE[LI] = true;
   persistProgress();
+  if (DAILY) DAILY.rec = DAILY.d.complete(n * 1000 + r.lok);
+  if (window.Arena) {
+    Arena.award('carsi-kacisi:first-catch', tx('awFirst'));
+    if (DONE.every(Boolean)) Arena.award('carsi-kacisi:all-roofs', tx('awAll'));
+    if (BESTLV.every(b => b && b.stars >= 3)) Arena.award('carsi-kacisi:all-stars', tx('awStars'));
+  }
   renderHudStars();
-  if (LI === LEVELS.length - 1) {
+  if (LI === LEVELS.length - 1 && !DAILY) {
     AUDIO.win();
     setTimeout(() => { if (mode === 'catch') { mode = 'ending'; showEnding(); } }, 3400);
     return;
@@ -2688,10 +2725,22 @@ function finishLevel() {
     if (mode !== 'catch') return;
     mode = 'result';
     showResult(stars, LAST_RESULT.r);
-    if (FLAG.auto) setTimeout(() => { if (mode === 'result') nextLevel(); }, 1200);
+    if (FLAG.auto && DAILY) window.carsi.finished = true;
+    else if (FLAG.auto) setTimeout(() => { if (mode === 'result') nextLevel(); }, 1200);
   }, 1500);
 }
 
+function shareResult() {
+  if (!window.Arena) return;
+  const url = 'https://furkiozknn.github.io/carsi-kacisi/' + (DAILY ? '?d=' + DAILY.d.day : '');
+  if (mode === 'ending') {
+    const total = BESTLV.reduce((a, b) => a + (b ? b.stars : 0), 0);
+    return Arena.share({ title: tx('name'), lines: [tx('ending'), tx('statTotal') + ': ' + total + ' / 30'], url });
+  }
+  if (!LAST_RESULT) return;
+  const r = LAST_RESULT.r, n = LAST_RESULT.stars.filter(Boolean).length;
+  return Arena.share({ title: tx('name'), lines: [(DAILY ? tx('daily') + ' ' + DAILY.d.day + ' · ' : '') + (LI + 1) + '. ' + lvName(LI), tx('statStars') + ': ' + n + ' / 3 · ' + tx('statTime') + ' ' + fmt(r.time), tx('statLokum') + ': ' + r.lok + ' / ' + r.lokTotal], url });
+}
 function nextLevel() {
   if (LI >= LEVELS.length - 1) { mode = 'ending'; showEnding(); return; }
   startLevel(LI + 1);
@@ -2717,9 +2766,19 @@ function applyQuality() {
   sun.castShadow = renderer.shadowMap.enabled;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, high && !FLAG.low ? 1.5 : 1));
   scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+  attachPerf();
+}
+// arena-kit dynamic resolution: never above the pixel ratio the quality setting chose, re-attached when it changes
+let arenaPerf = null;
+function attachPerf() {
+  if (!window.Arena) return;
+  if (arenaPerf) arenaPerf.stop();
+  const base = renderer.getPixelRatio();
+  arenaPerf = Arena.perf.attach(renderer, { max: base, start: base, min: Math.min(0.6, base) });
 }
 function applyLanguage() {
   document.documentElement.lang = S.lang;
+  if (window.Arena) Arena.lang(S.lang);
   document.querySelectorAll('[data-t]').forEach(n => { n.textContent = tx(n.dataset.t); });
   el('tTitle') && (el('tTitle').textContent = tx('name'));
   el('foot').innerHTML = tx('footer', { m: MODEL }).replace('Claude Game Arena', '<a href="https://github.com/Furkiozknn" target="_blank" rel="noopener">Claude Game Arena</a>');
@@ -2743,12 +2802,12 @@ el('bTSettings').addEventListener('click', openSettings);
 el('bMapBack').addEventListener('click', openTitle);
 el('bMapSettings').addEventListener('click', openSettings);
 el('bResume').addEventListener('click', resumeGame);
-el('bRestart').addEventListener('click', () => { startLevel(LI); });
+el('bRestart').addEventListener('click', () => { startLevel(LI, true); });
 el('bPSettings').addEventListener('click', openSettings);
 el('bPMenu').addEventListener('click', openTitle);
 el('bSetClose').addEventListener('click', closeSettings);
 el('rNext').addEventListener('click', () => { AUDIO.click(); nextLevel(); });
-el('rRetry').addEventListener('click', () => { AUDIO.click(); startLevel(LI); });
+el('rRetry').addEventListener('click', () => { AUDIO.click(); startLevel(LI, true); });
 el('rMap').addEventListener('click', openMap);
 el('eMenu').addEventListener('click', openTitle);
 el('eAgain').addEventListener('click', () => startLevel(0));
@@ -2763,6 +2822,11 @@ el('sEN').addEventListener('click', () => setLang('en'));
 el('sLow').addEventListener('click', () => { S.quality = 'low'; applyQuality(); syncSettings(); persistSettings(); });
 el('sHigh').addEventListener('click', () => { S.quality = 'high'; applyQuality(); syncSettings(); persistSettings(); });
 el('sFull').addEventListener('click', toggleFullscreen);
+el('bDaily').addEventListener('click', () => { AUDIO.click(); startDaily(); });
+el('sA11y').addEventListener('click', () => { if (window.Arena) Arena.openSettings(); });
+el('rShare').addEventListener('click', shareResult);
+el('eShare').addEventListener('click', shareResult);
+if (window.Arena) { const others = Arena.games.filter(g => g !== Arena.game); el('eOther').href = 'https://furkiozknn.github.io/' + others[Math.floor(Math.random() * others.length)] + '/'; }
 
 function toggleFullscreen() {
   try {
@@ -2777,6 +2841,7 @@ function nextUnlockedIndex() {
 
 addEventListener('keydown', e => {
   if (e.target && e.target.tagName === 'INPUT') return;
+  if (document.querySelector('.arena-modal')) return;   // the arena-kit panel handles its own keys (Esc closes it)
   KEYS.add(e.code);
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   if (e.code === 'Space' && !e.repeat && mode === 'play') INPUT.jumpQ = true;
@@ -2835,6 +2900,9 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
+// arena-kit: same pause when the tab is hidden (the game's own listener stays); 'resume' leaves the pause menu up.
+// The game has no reduced-motion flag of its own to map (only the CSS media query).
+if (window.Arena) Arena.on('pause', pauseGame);
 
 /* ---------- main loop ---------- */
 let acc = 0, last = performance.now(), fpsN = 0, fpsT = 0, fps = 0;
@@ -2929,7 +2997,7 @@ el('bPlay').disabled = false;
 renderTitleBest();
 requestAnimationFrame(t => { last = t; });
 requestAnimationFrame(frame);
-if (FLAG.auto) { startLevel(0); }
+if (FLAG.auto) { if (Q.get('mode') === 'daily' && window.Arena) startDaily(); else startLevel(0); }
 else if (FLAG.sim) { startLevel(0); carsiSim(FLAG.sim); }
 </script>
 </body>
