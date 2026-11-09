@@ -1057,7 +1057,7 @@ const LOOK = [
 ];
 
 /* ---------- constants ---------- */
-const STEP = 1 / 120, GRAV = 30, JUMP_V = 11.4, DJ_V = 9.6, RUN = 7.6, PR = 0.34, SNAP = 0.45, COYOTE = 0.12, JBUF = 0.13;
+const STEP = 1 / 120, GRAV = 30, JUMP_V = 11.4, DJ_V = 9.6, RUN = 7.6, PR = 0.34, SNAP = 0.45, COYOTE = 0.12, JBUF = 0.10;
 const ROPE_SPEED = 9, DEATH_T = 0.7, STEP_WALL = 0.45, CAT_R2 = 5.8, LOK_R2 = 1.2;
 const TOP_Y = -9;
 // Zincir Tezgâh (stall chain): market stalls stand on the flat roofs. Running (or sliding) into one topples it;
@@ -1311,7 +1311,7 @@ function windAt(z) {
 
 /* ---------- player and cat state ---------- */
 const P = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, grounded: false, gS: null, coyote: 0, jumpBuf: 0, airJump: 1,
-  slideT: 0, rope: null, noRope: 0, dead: 0, anim: 0, stepAcc: 0, sliding: false, lastGust: 0 };
+  slideT: 0, rope: null, noRope: 0, dead: 0, anim: 0, stepAcc: 0, sliding: false, lastGust: 0, groundTime: 0 };
 let L = null;            // level run state
 let LI = 0;              // current level index
 let mode = 'title';      // title | map | play | pause | result | ending
@@ -1324,7 +1324,9 @@ function approach(v, t, d) { return v < t ? Math.min(t, v + d) : Math.max(t, v -
 
 function stepPlayer(dt, inp) {
   const wasG = P.grounded;
-  P.coyote = wasG ? COYOTE : P.coyote - dt;
+  if (wasG) P.groundTime = performance.now();
+  const timeSinceGrounded = (performance.now() - P.groundTime) / 1000;
+  P.coyote = (wasG || timeSinceGrounded <= 0.12) ? COYOTE : Math.max(0, P.coyote - dt);
   P.jumpBuf = inp.jump ? JBUF : P.jumpBuf - dt;
   P.slideT = inp.slide && wasG ? 0.7 : Math.max(0, P.slideT - dt);
   if (wasG && P.gS && P.gS.mv) P.x += P.gS.dx;       // ride the sliding plank
@@ -1340,8 +1342,9 @@ function stepPlayer(dt, inp) {
   P.sliding = false;
   if (wasG && P.gS && P.gS.t === 'dome') domeSlide(dt, inp);
 
+  const h = groundAt(P.x, P.z);
   let jumped = false;
-  if (P.jumpBuf > 0 && P.coyote > 0) {
+  if (P.jumpBuf > 0 && (P.coyote > 0 || (h > -Infinity && P.y <= h + SNAP + 0.5 && P.jumpBuf <= 0.1))) {
     P.vy = JUMP_V; P.grounded = false; P.coyote = 0; P.jumpBuf = 0; P.airJump = 1; jumped = true;
     AUDIO.jump(); FX.dust(P.x, P.y, P.z, 4, 0.6);
   } else if (P.jumpBuf > 0 && P.airJump > 0 && !wasG) {
@@ -1355,10 +1358,10 @@ function stepPlayer(dt, inp) {
   P.y += P.vy * dt;
 
   const wasGround = wasG && !jumped;
-  const h = groundAt(P.x, P.z);
-  if (P.vy <= 0 && h > -Infinity && P.y <= h + (wasGround ? SNAP : 0)) {
-    if (!wasGround && P.vy < -6) { AUDIO.land(); FX.dust(P.x, h, P.z, 8, 1.2); }
-    P.y = h; P.vy = 0; P.grounded = true; P.gS = gS; P.airJump = 1; P.coyote = COYOTE;
+  const hNew = groundAt(P.x, P.z);
+  if (P.vy <= 0 && hNew > -Infinity && P.y <= hNew + (wasGround ? SNAP : 0)) {
+    if (!wasGround && P.vy < -6) { AUDIO.land(); FX.dust(P.x, hNew, P.z, 8, 1.2); }
+    P.y = hNew; P.vy = 0; P.grounded = true; P.gS = gS; P.airJump = 1; P.coyote = COYOTE; P.groundTime = performance.now();
   } else {
     P.grounded = false; P.gS = null;
   }
