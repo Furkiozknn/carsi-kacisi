@@ -2229,7 +2229,7 @@ function applyLanguage() {
   document.documentElement.lang = S.lang;
   document.querySelectorAll('[data-t]').forEach(n => { n.textContent = tx(n.dataset.t); });
   el('tTitle') && (el('tTitle').textContent = tx('name'));
-  el('foot').innerHTML = tx('footer', { m: MODEL }).replace('Claude Game Arena', '<a href="https://furkiozknn.github.io/" target="_blank" rel="noopener">Claude Game Arena</a>');
+  el('foot').innerHTML = tx('footer', { m: MODEL }).replace('Claude Game Arena', '<a href="https://github.com/Furkiozknn" target="_blank" rel="noopener">Claude Game Arena</a>');
   document.title = tx('name');
   applyHudLabels();
   syncSettings();
