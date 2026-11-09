@@ -87,6 +87,11 @@ svg{display:block;fill:currentColor}
 .stars{display:inline-flex;gap:3px;align-items:center;padding-left:6px;border-left:2px solid rgba(26,18,11,0.15)}
 .stars svg{width:19px;height:19px;color:#DED6C4;filter:drop-shadow(0 1px 0 var(--line));transition:color .2s,transform .2s}
 .stars svg.on{color:var(--gold);transform:scale(1.08)}
+.stat-stall{padding-left:6px;border-left:2px solid rgba(26,18,11,0.15)}
+.stat-stall svg{width:20px;height:20px}
+.combo{font-style:normal;font-family:var(--font-display);font-size:12px;color:var(--paper);background:var(--spice);
+  border:2px solid var(--line);border-radius:999px;padding:1px 7px;box-shadow:var(--shadow-sm);animation:comboPop .25s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes comboPop{from{transform:scale(.6)}to{transform:none}}
 .acts{display:flex;gap:6px;margin-left:4px}
 .ibtn{width:44px;height:44px;min-width:44px;min-height:44px;border-radius:50%;border:2.5px solid var(--line);
   background:var(--paper-card);display:inline-flex;align-items:center;justify-content:center;color:var(--ink);
@@ -293,7 +298,7 @@ svg{display:block;fill:currentColor}
   #tSlide{width:50px;height:50px;bottom:calc(78px + var(--sa-b))}
 }
 @media (prefers-reduced-motion: reduce){
-  #touch,.toast,.hint,.notebook,.btn,.card,.stars-big svg.on{animation:none!important;transition:none!important}
+  #touch,.toast,.hint,.notebook,.btn,.card,.stars-big svg.on,.combo{animation:none!important;transition:none!important}
 }
 </style>
 <script type="importmap">
@@ -338,6 +343,13 @@ svg{display:block;fill:currentColor}
           <circle cx="8.5" cy="9.5" r="0.7" fill="#FFF"/>
         </svg>
         <b id="hLok">0/0</b>
+      </span>
+      <span class="stat stat-stall" id="hStall" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="11" width="16" height="9" rx="1.5" fill="#8B5A2B" stroke="#1A120B" stroke-width="1.6"/>
+          <circle cx="8.5" cy="9.5" r="2.6" fill="#F59E0B"/><circle cx="15.5" cy="9.5" r="2.6" fill="#C1272D"/><circle cx="12" cy="7.5" r="2.4" fill="#FACC15"/>
+        </svg>
+        <small data-t="stall"></small> <b id="hStallN">0</b> <em class="combo" id="hCombo" hidden></em>
       </span>
       <span class="stars" id="hStars" aria-hidden="true"></span>
     </div>
@@ -570,7 +582,9 @@ const TX = {
     hrope: 'Çamaşır ipine tutun, sonra zıpla', hplank: 'Kayan tahtada dengede dur', htile: 'Çini çatlıyor: hemen geç',
     hgust: 'Rüzgâra karşı yön tut', hpigeon: 'Güvercinleri ürkütmeden geç',
     keyJump: 'Boşluk', keySlide: 'Shift', keyMove: 'WASD', gate: 'Kapı', fact: 'Biliyor muydun?',
-    notebook: 'Lonca defteri', signFound: 'Lonca işareti bulundu', signCount: 'Lonca işaretleri'
+    notebook: 'Lonca defteri', signFound: 'Lonca işareti bulundu', signCount: 'Lonca işaretleri',
+    stall: 'Tezgâh', stallHit: 'Tezgâh devrildi! Kedi kayıyor', stallCombo: 'Zincir Tezgâh ×{n}!',
+    hstall: 'Tezgâha çarp: dökülen mallar kediyi yavaşlatır'
   },
   en: {
     name: 'Çarşı Kaçışı', sub: 'Run the rooftops, catch the thief cat.',
@@ -596,7 +610,9 @@ const TX = {
     hrope: 'Grab the laundry line, then jump', hplank: 'Stay balanced on the sliding plank', htile: 'Cracking tile: keep moving',
     hgust: 'Lean into the wind gust', hpigeon: 'Pass the pigeons quietly',
     keyJump: 'Space', keySlide: 'Shift', keyMove: 'WASD', gate: 'Gate', fact: 'Did you know?',
-    notebook: 'Guild notebook', signFound: 'Guild sign found', signCount: 'Guild signs'
+    notebook: 'Guild notebook', signFound: 'Guild sign found', signCount: 'Guild signs',
+    stall: 'Stalls', stallHit: 'Stall toppled! The cat slips', stallCombo: 'Stall Chain ×{n}!',
+    hstall: 'Run into the stall: spilled goods slow the cat'
   }
 };
 const tx = (k, v) => {
@@ -674,6 +690,10 @@ const LOOK = [
 const STEP = 1 / 120, GRAV = 30, JUMP_V = 11.4, DJ_V = 9.6, RUN = 7.6, PR = 0.34, SNAP = 0.45, COYOTE = 0.12, JBUF = 0.13;
 const ROPE_SPEED = 9, DEATH_T = 0.7, STEP_WALL = 0.45, CAT_R2 = 5.8, LOK_R2 = 1.2;
 const TOP_Y = -9;
+// Zincir Tezgâh (stall chain): market stalls stand on the flat roofs. Running (or sliding) into one topples it;
+// its spilled goods trip the thief cat for a moment. Topples within STALL_WIN seconds of each other build a combo.
+// Stalls have no collision, so a stall, standing or toppled, never blocks the path.
+const STALL_WIN = 2.6, STALL_HX = 1.05, STALL_HZ = 0.95, STALL_MAX = 24;
 
 /* ---------- renderer, scene, camera ---------- */
 const canvas = document.getElementById('c');
@@ -843,6 +863,23 @@ function parseLevel(def) {
   const roofs = W.surf.filter(s => s.t === 'box' && !s.mv && !s.brk && s.z1 - s.z0 >= 8 && !domeZ.has((s.z0 + s.z1) / 2));
   const sr = roofs[Math.floor(roofs.length / 2)];
   W.sign = sr ? { x: 4.9, y: sr.top, z: (sr.z0 + sr.z1) / 2 } : null;
+  // stalls: own random stream (seed + 29), so roofs, lokum and pigeons stay as before. Only on plain flat roofs
+  // (no dome, plank, breaking tile or goal roof), at least 4 units before the far edge and 3.5 after the near edge
+  W.stalls = [];
+  const srnd = rng(def.seed + 29), XS = [-1.6, 0, 1.6];
+  for (const s of W.surf) {
+    if (W.stalls.length >= STALL_MAX) break;
+    if (s.t !== 'box' || s.mv || s.brk || s.z1 - s.z0 < 10 || domeZ.has((s.z0 + s.z1) / 2)) continue;
+    if (s.z1 > W.spawn.z - 4 || (W.goal.z >= s.z0 && W.goal.z <= s.z1)) continue;
+    if (srnd() > 0.6) continue;
+    const span = (s.z1 - 3.5) - (s.z0 + 4);
+    const z = s.z1 - 3.5 - srnd() * Math.max(0, span - (span > 3.5 ? 3.5 : 0));
+    const xi = Math.floor(srnd() * 3);
+    W.stalls.push({ x: XS[xi], y: s.top, z, st: 0, a: 0, dz: 0, yaw: (srnd() - 0.5) * 0.5 });
+    if (span > 3.5 && srnd() < 0.4 && W.stalls.length < STALL_MAX) {
+      W.stalls.push({ x: XS[(xi + 1 + Math.floor(srnd() * 2)) % 3], y: s.top, z: z - 3.5, st: 0, a: 0, dz: 0, yaw: (srnd() - 0.5) * 0.5 });
+    }
+  }
   return W;
 }
 
@@ -1047,6 +1084,11 @@ function postStep() {
       toast(tx('gate') + ' ' + (c.i + 1) + ': ' + (d >= 0 ? '+' : '-') + Math.abs(d).toFixed(1) + ' s', d <= 0 ? 'good' : 'info');
     }
   }
+  if (P.grounded) {
+    for (const st of W.stalls) {
+      if (st.st === 0 && Math.abs(P.x - st.x) < STALL_HX && Math.abs(P.z - st.z) < STALL_HZ && Math.abs(P.y - st.y) < 1) toppleStall(st);
+    }
+  }
   if (W.sign && !SIGNS[LI] && Math.hypot(P.x - W.sign.x, P.z - W.sign.z) < 1.8 && Math.abs(P.y - W.sign.y) < 2.2) collectSign();
   const gx = P.x, gz = P.z - L.catZ;
   if (gx * gx + gz * gz < CAT_R2) { finishLevel(); return; }
@@ -1057,6 +1099,7 @@ function kill() {
   P.dead = DEATH_T; P.rope = null;
   L.falls++;
   L.fallT = 6;   // a fall stretches the cat's lead to 13 for a while
+  L.combo = 0; L.slowT = 0;   // a fall breaks the stall chain
   AUDIO.fall(); toast(tx('fell'), 'bad');
   FX.splash(P.x, P.z);
 }
@@ -1074,20 +1117,38 @@ function respawn() {
   P.vx = 0; P.vy = 0; P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.airJump = 1;
 }
 
+// Zincir Tezgâh: topple a stall; the combo grows while topples follow within STALL_WIN seconds.
+// The spill trips the cat: for slowT seconds it runs at most 3.5 units/s and its wanted lead drops by 3 (never below 5).
+// A slide into the stall (Shift) kicks it: the goods fly further and the trip lasts 0.6 s longer.
+function toppleStall(st) {
+  const kick = P.slideT > 0;
+  st.st = 1; st.a = 0; st.dz = -(0.5 + Math.min(1, Math.abs(P.vz) / RUN) * 0.6) * (kick ? 1.6 : 1);
+  L.combo = L.time - L.lastTop <= STALL_WIN ? L.combo + 1 : 1;
+  L.lastTop = L.time; L.stalls++;
+  L.bestCombo = Math.max(L.bestCombo, L.combo);
+  L.slowT = Math.max(L.slowT, 1.2 + 0.6 * Math.min(L.combo, 4) + (kick ? 0.6 : 0));
+  AUDIO.topple(L.combo); FX.spill(st.x, st.y, st.z, kick);
+  toast(L.combo >= 2 ? tx('stallCombo', { n: L.combo }) : tx('stallHit'), 'good');
+}
+
 // The runner's flow: running without a stop for about 4 s brings the cat down to 6 units; a fall stretches it to 13.
 // The lead never goes below 5, so the CAT_R2 catch is unchanged.
 function updateLead(dt) {
   const sp = Math.hypot(P.vx, P.vz);
   L.flow = sp > 2 && !P.rope ? L.flow + dt : 0;
   L.fallT = Math.max(0, L.fallT - dt);
-  const want = L.fallT > 0 ? 13 : L.flow >= 4 ? 6 : 10;
+  L.slowT = Math.max(0, L.slowT - dt);
+  const want = (L.fallT > 0 ? 13 : L.flow >= 4 ? 6 : 10) - (L.slowT > 0 ? 3 : 0);
   L.lead = Math.max(5, L.lead + Math.max(-2 * dt, Math.min(2 * dt, want - L.lead)));
 }
 
 // The cat keeps ahead of the runner by its lead, never beyond the goal, and runs at most 9 units/s.
 function updateCat(dt) {
   const target = Math.max(W.goal.z, P.z - L.lead);
-  L.catZ += Math.max(-9 * dt, Math.min(9 * dt, target - L.catZ));
+  const vmax = L.slowT > 0 ? 3.5 : 9;   // tripped on spilled goods
+  L.catZ += Math.max(-vmax * dt, Math.min(9 * dt, target - L.catZ));
+  // even tripped, the cat scrambles on before the runner is within 5 units: the catch stays at the goal only
+  L.catZ = Math.max(W.goal.z, Math.min(L.catZ, P.z - 5));
 }
 
 // the first guild sign of a level: the notebook opens with a sourced fact; the sign counts on the roof map
@@ -1170,10 +1231,16 @@ function readInput() {
 function botInput() {
   const out = { mx: 0, mz: 0, jump: false, slide: false };
   if (P.dead > 0 || P.rope) return out;
-  let tx0 = 0;
+  let tx0 = 0, plank = false;
   for (const s of SURF) {
     if (!s.mv || !s.on) continue;
-    if (P.z <= s.z1 + 1 && P.z >= s.z0 - 4) { tx0 = (s.x0 + s.x1) / 2; break; }
+    if (P.z <= s.z1 + 1 && P.z >= s.z0 - 4) { tx0 = (s.x0 + s.x1) / 2; plank = true; break; }
+  }
+  // no plank to ride: steer into the nearest standing stall within 6 units ahead (stalls sit on plain roofs only)
+  if (!plank) {
+    for (const st of W.stalls) {
+      if (st.st === 0 && st.z < P.z + 0.3 && st.z > P.z - 6) { tx0 = st.x; break; }
+    }
   }
   out.mx = Math.max(-1, Math.min(1, (tx0 - P.x) * 2.5));
   out.mz = -1;
@@ -1358,9 +1425,37 @@ function makeBird() {
   return { g };
 }
 
+// a market stall: wooden crate of oranges, pomegranates and lemons under a small red awning.
+// Built with its far-bottom edge at z = 0, so it tips forward (toward -z) around that edge.
+const STALL_GEO = (() => {
+  const parts = [
+    boxG(-0.6, 0.6, 0, 0.55, 0, 0.9, COL.wood),
+    boxG(-0.64, 0.64, 0.5, 0.6, -0.03, 0.93, 0x6b4423),
+    blobG(-0.3, 0.68, 0.28, 0.32, 0.26, 0.32, 0xf59e0b),
+    blobG(0.04, 0.7, 0.62, 0.32, 0.26, 0.32, 0xc1272d),
+    blobG(0.33, 0.68, 0.26, 0.3, 0.24, 0.3, 0xfacc15),
+    boxG(0.52, 0.6, 0.55, 1.45, 0.8, 0.88, COL.wood),
+    boxG(-0.6, -0.52, 0.55, 1.45, 0.8, 0.88, COL.wood),
+    boxG(-0.72, 0.72, 1.45, 1.55, 0.05, 0.98, 0xC1272D)
+  ];
+  const g = mergeGeometries(parts, false);
+  for (const p of parts) p.dispose();
+  return g;
+})();
+let stallMesh = null, stallInk = null;
+function setStallMatrix(st, i) {
+  const k = st.a * st.a;   // ease in: the stall tips slowly, then slams down
+  dummy.position.set(st.x, st.y, st.z - 0.45 + st.dz * k);
+  dummy.rotation.set(-k * Math.PI / 2, st.yaw * k, 0);
+  dummy.scale.set(1, 1, 1);
+  dummy.updateMatrix();
+  stallMesh.setMatrixAt(i, dummy.matrix);
+}
+
 function buildLevel(def) {
   // dispose previous per-level geometry
   for (const m of cur.meshes) { world.remove(m); if (m.geometry) m.geometry.dispose(); }
+  if (cur.stall) for (const m of cur.stall) world.remove(m);
   if (lokMesh) { world.remove(lokMesh); lokMesh.dispose(); }
   for (const b of birds) { world.remove(b.g); b.g.geometry.dispose(); }
   birds.length = 0;
@@ -1579,6 +1674,21 @@ function buildLevel(def) {
     }
   }
 
+  // stalls: one InstancedMesh plus its ink outline (two draw calls for all stalls of a level)
+  stallMesh = stallInk = null;
+  if (W.stalls.length) {
+    stallMesh = new THREE.InstancedMesh(STALL_GEO, M.vc, W.stalls.length);
+    stallMesh.castShadow = true;
+    stallInk = new THREE.InstancedMesh(STALL_GEO, INK_WORLD, W.stalls.length);
+    stallInk.instanceMatrix = stallMesh.instanceMatrix;
+    stallMesh.frustumCulled = stallInk.frustumCulled = false;
+    W.stalls.forEach((st, i) => setStallMatrix(st, i));
+    stallMesh.instanceMatrix.needsUpdate = true;
+    world.add(stallMesh, stallInk);
+    // keep the shared geometry: removed from the world on the next build, never disposed
+    cur.stall = [stallMesh, stallInk];
+  }
+
   // lokum: one instanced mesh
   const n = Math.max(1, W.lok.length);
   lokMesh = new THREE.InstancedMesh(G.lok, M.lok, n);
@@ -1602,7 +1712,8 @@ function buildLevel(def) {
     def, index: LI, time: 0, lokGot: 0, falls: 0, lokTotal: W.lokTotal, par: W.par, done: false, caughtT: 0,
     respawn: W.spawn, started: false, flockT: 1.2, flockIdx: 0, lastFlap: 0,
     catZ: Math.max(W.goal.z, W.spawn.z - 10), caughtWall: 0,
-    lead: 10, flow: 0, fallT: 0, hissT: -1e9, splits: W.checks.map(() => null)
+    lead: 10, flow: 0, fallT: 0, hissT: -1e9, splits: W.checks.map(() => null),
+    stalls: 0, combo: 0, bestCombo: 0, lastTop: -1e9, slowT: 0
   };
   P.x = W.spawn.x; P.y = W.spawn.y; P.z = W.spawn.z;
   P.vx = P.vy = P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.dead = 0; P.airJump = 1;
@@ -1663,6 +1774,11 @@ const FX = {
   dust(x, y, z, n, s) { if (S.quality === 'low') n = Math.ceil(n / 2); for (let i = 0; i < n; i++) spawnP(x + (Math.random() - 0.5) * 0.6, y + 0.1, z + (Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 2, Math.random() * 1.2 * s, (Math.random() - 0.5) * 2, 0x6b5a44, 0.6, 2.5); },
   spark(x, y, z) { for (let i = 0; i < 10; i++) spawnP(x, y, z, (Math.random() - 0.5) * 3, 1.5 + Math.random() * 2, (Math.random() - 0.5) * 3, 0xffe08a, 0.7, 4); },
   splash(x, z) { for (let i = 0; i < 14; i++) spawnP(x + (Math.random() - 0.5), -1, z + (Math.random() - 0.5), (Math.random() - 0.5) * 2, 4 + Math.random() * 3, (Math.random() - 0.5) * 2, 0xffffff, 0.9, 12); },
+  spill(x, y, z, kick) {
+    const C = [0xf59e0b, 0xc1272d, 0xfacc15, 0x3f8a4a], n = S.quality === 'low' ? 9 : 18, f = kick ? 1.7 : 1;
+    for (let i = 0; i < n; i++) spawnP(x + (Math.random() - 0.5) * 0.8, y + 0.7, z - 0.4, (Math.random() - 0.5) * 3, 2 + Math.random() * 3, -(1 + Math.random() * 3) * f, C[i % 4], 0.9, 9);
+    FX.dust(x, y, z, 6, 0.9);
+  },
   wind(z) { if (Math.random() < 0.6) spawnP(P.x + (Math.random() - 0.5) * 16, P.y + 1 + Math.random() * 4, z + (Math.random() - 0.5) * 3, 16, 0, 0, 0xffffff, 0.55, 0); }
 };
 function updateParticles(dt) {
@@ -1793,6 +1909,18 @@ function frameVisuals(dt, now) {
     if (runner && Math.abs(L.catZ - P.z) < 16 && now - (L.lastMeow || 0) > 4500) { L.lastMeow = now; AUDIO.meow(); }
   }
 
+  // stalls tipping over (visual only; the sim already counted the topple)
+  if (W && stallMesh) {
+    let dirty = false;
+    W.stalls.forEach((st, i) => {
+      if (st.st !== 1) return;
+      st.a = Math.min(1, st.a + dt / 0.38);
+      if (st.a >= 1) st.st = 2;
+      setStallMatrix(st, i); dirty = true;
+    });
+    if (dirty) stallMesh.instanceMatrix.needsUpdate = true;
+  }
+
   // planks and breakers
   if (W) for (const s of W.surf) {
     if (s.mv && s.mesh) { s.mesh.position.x = s.off; }
@@ -1854,7 +1982,7 @@ function frameVisuals(dt, now) {
 }
 
 /* ---------- first-encounter hints: once per type (SAVE.seen), placed at the obstacle, never blocks movement ---------- */
-const HINT_KEY = { gap: 'jump', djump: 'jump', dome: 'slide', rope: 'jump', plank: 'move', tile: 'move', gust: 'move', pigeon: '' };
+const HINT_KEY = { gap: 'jump', djump: 'jump', dome: 'slide', rope: 'jump', plank: 'move', tile: 'move', gust: 'move', pigeon: '', stall: 'slide' };
 const elHint = document.getElementById('hint');
 let hintLeft = 0, hintAt = null;
 const hintPos = new THREE.Vector3();
@@ -1880,6 +2008,7 @@ function hintCandidates() {
   for (const ln of W.lines) if (P.z - ln.za < 8 && P.z > ln.zb) out.push(['rope', ln.x, ln.y + 1, (ln.za + ln.zb) / 2]);
   for (const g of W.gusts) if (P.z - g.z1 < 8 && P.z > g.z0) out.push(['gust', 0, P.y + 2.5, (g.z0 + g.z1) / 2]);
   for (const p of W.perch) if (p.g && Math.hypot(P.x - p.x, P.z - p.z) < 8) out.push(['pigeon', p.x, p.y + 1.2, p.z]);
+  for (const st of W.stalls) if (st.st === 0 && P.z - st.z < 8 && P.z > st.z) { out.push(['stall', st.x, st.y + 2.2, st.z]); break; }
   return out;
 }
 function updateHints(dt) {
@@ -1934,6 +2063,10 @@ function updateHud() {
   set('hLvl', String(L.index + 1));
   set('hTime', fmt(L.time));
   set('hLok', L.lokGot + '/' + L.lokTotal);
+  if (hudCache.stallOn !== (L.stalls > 0)) { hudCache.stallOn = L.stalls > 0; el('hStall').hidden = !hudCache.stallOn; }
+  set('hStallN', String(L.stalls));
+  const chain = L.combo >= 2 && L.time - L.lastTop <= STALL_WIN ? '×' + L.combo : '';
+  if (hudCache.chain !== chain) { hudCache.chain = chain; el('hCombo').textContent = chain; el('hCombo').hidden = !chain; }
   if (hudCache.stars !== (L.lokGot + ':' + (L.time <= L.par) + ':' + L.falls)) { hudCache.stars = L.lokGot + ':' + (L.time <= L.par) + ':' + L.falls; renderHudStars(); }
 }
 function applyHudLabels() {
@@ -2026,6 +2159,12 @@ const AUDIO = (() => {
       tone(620, 980, 0.28, 0.14, 'sawtooth'); tone(980, 560, 0.3, 0.12, 'sawtooth', 0.28);
     },
     hiss() { noise(4200, 2.5, 0.42, 0.16, 'highpass'); },
+    // wooden crash, rolling fruit, and a rising chime that climbs with the combo
+    topple(n) {
+      noise(320, 0.8, 0.28, 0.32, 'lowpass'); noise(1800, 1.5, 0.2, 0.14, 'bandpass', 0.08);
+      const f = 520 * Math.pow(1.12246, Math.min(n, 8) - 1);
+      tone(f, f * 1.5, 0.16, 0.16, 'triangle', 0.05);
+    },
     win() { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.3, 0.2, 'triangle', i * 0.12)); },
     click() { tone(900, 900, 0.04, 0.15, 'square'); }
   };
@@ -2408,6 +2547,8 @@ window.carsi = {
   get player() { return { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), vx: +P.vx.toFixed(2), vy: +P.vy.toFixed(2), vz: +P.vz.toFixed(2), grounded: P.grounded, dead: P.dead > 0, rope: !!P.rope }; },
   get surfacesLoaded() { return SURF.length; },
   get catZ() { return L ? +L.catZ.toFixed(1) : null; },
+  get stalls() { return L ? { total: W.stalls.length, toppled: L.stalls, combo: L.combo, bestCombo: L.bestCombo, slowT: +L.slowT.toFixed(2) } : null; },
+  get stallList() { return W ? W.stalls.map(s => ({ x: s.x, y: s.y, z: +s.z.toFixed(2), st: s.st })) : []; },
   get flockVisible() { return birds.filter(b => b.pool && b.g.visible).length; },
   assets: { state: 'none', loaded: 0, total: 0 },
   flags: FLAG,
