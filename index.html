@@ -85,6 +85,8 @@ svg{display:block;fill:currentColor}
 .stat b{color:var(--ink);font-family:var(--font-display);font-size:15px;font-variant-numeric:tabular-nums}
 .stat svg{width:22px;height:22px;filter:drop-shadow(1px 1.5px 0 var(--line))}
 .icon-lokum{width:22px;height:22px;filter:drop-shadow(1px 1.5px 0 var(--line))}
+.icon-dist{width:18px;height:18px;filter:drop-shadow(1px 1.5px 0 var(--line));color:var(--teal)}
+#tEndless{margin-top:6px}
 .stars{display:inline-flex;gap:3px;align-items:center;padding-left:6px;border-left:2px solid rgba(26,18,11,0.15)}
 .stars svg{width:19px;height:19px;color:#DED6C4;filter:drop-shadow(0 1px 0 var(--line));transition:color .2s,transform .2s}
 .stars svg.on{color:var(--gold);transform:scale(1.08)}
@@ -790,6 +792,13 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     </div>
     <div class="stats stats-left">
       <span class="stat stat-lvl"><small data-t="level"></small> <b id="hLvl">1</b></span>
+      <span class="stat stat-dist" id="hDistWrap" hidden>
+        <svg class="icon-dist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5" fill="currentColor"/>
+        </svg>
+        <small data-t="dist"></small> <b id="hDist">0 m</b>
+      </span>
       <span class="stat stat-time"><small data-t="time"></small> <b id="hTime">0:00</b></span>
     </div>
   </div>
@@ -885,10 +894,12 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <div class="col">
       <button class="btn pri" id="bPlay" data-t="play" disabled></button>
       <button class="btn" id="bCont" data-t="cont" hidden></button>
+      <button class="btn" id="bEndless" data-t="endless"></button>
       <button class="btn" id="bDaily" data-t="daily"></button>
       <button class="btn" id="bTSettings" data-t="settings"></button>
     </div>
     <p class="best" id="tBest">Yükleniyor… / Loading…</p>
+    <p class="best" id="tEndless" hidden></p>
     <p class="best" id="tDaily"></p>
     <p class="best" id="loadFail" hidden>3D motor yüklenemedi, internet bağlantınızı kontrol edin. / The 3D engine could not load; check your internet connection.</p>
   </div>
@@ -1002,7 +1013,7 @@ const Q = new URLSearchParams(location.search);
 const FLAG = { auto: Q.has('auto'), debug: Q.has('debug'), low: Q.has('low'), noassets: Q.has('noassets'), sim: parseFloat(Q.get('sim')) || 0, lang: Q.get('lang') };
 
 /* ---------- settings and saves (every storage access is guarded) ---------- */
-const KEY = { set: 'arena.carsi.settings', save: 'arena.carsi.save', best: 'arena.carsi.best', ghosts: 'arena.carsi.ghosts' };
+const KEY = { set: 'arena.carsi.settings', save: 'arena.carsi.save', best: 'arena.carsi.best', ghosts: 'arena.carsi.ghosts', endless: 'arena.carsi.endless' };
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return Object.assign({}, d, v ? JSON.parse(v) : {}); } catch (e) { return Object.assign({}, d); } }
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage blocked: play without saving */ } }
 
@@ -1045,6 +1056,8 @@ const persistGhosts = () => {
   for (let i = 0; i < 10; i++) if (GHOSTLV[i]) data[i] = GHOSTLV[i];
   lsSet(KEY.ghosts, data);
 };
+const getEndlessBest = () => { const d = lsGet(KEY.endless, { best: 0 }); return (d && typeof d.best === 'number') ? d.best : 0; };
+const saveEndlessBest = dist => lsSet(KEY.endless, { best: dist });
 
 /* ---------- text ---------- */
 const TX = {
@@ -1078,7 +1091,8 @@ const TX = {
     hstall: 'Tezgâha çarp: dökülen mallar kediyi yavaşlatır',
     daily: 'Günün Meydan Okuması', dailyLine: 'Günlük seri: {s} gün · en iyi: {b}', dailyDone: 'Bugünkü çatı tamam', dailyLevel: 'Bugünün çatısı: {n}',
     a11y: 'Erişilebilirlik', a11yOpen: 'Aç', share: 'Paylaş', another: 'Başka oyun',
-    awFirst: 'İlk kedi yakalandı', awAll: '10 çatının hepsi', awStars: '30 yıldızın hepsi', ghost: 'Hayalet'
+    awFirst: 'İlk kedi yakalandı', awAll: '10 çatının hepsi', awStars: '30 yıldızın hepsi', ghost: 'Hayalet',
+    endless: 'Çarşı Turu', endlessTitle: 'Çarşı Turu (Sonsuz)', endlessSub: 'Sonsuz çatı koşusu sona erdi.', endlessOver: 'Tur Bitti!', dist: 'Mesafe', endlessBest: 'Çarşı Turu Rekoru', endlessUnlockedToast: 'Çarşı Turu modu açıldı!', endlessGate: '{d} m Geçildi!'
   },
   en: {
     name: 'Çarşı Kaçışı', sub: 'Run the rooftops, catch the thief cat.',
@@ -1110,7 +1124,8 @@ const TX = {
     hstall: 'Run into the stall: spilled goods slow the cat',
     daily: 'Daily challenge', dailyLine: 'Daily streak: {s} · best: {b}', dailyDone: 'Today\'s roof is done', dailyLevel: 'Today\'s roof: {n}',
     a11y: 'Accessibility', a11yOpen: 'Open', share: 'Share', another: 'Another game',
-    awFirst: 'First cat caught', awAll: 'All 10 roofs', awStars: 'All 30 stars', ghost: 'Ghost'
+    awFirst: 'First cat caught', awAll: 'All 10 roofs', awStars: 'All 30 stars', ghost: 'Ghost',
+    endless: 'Endless Tour', endlessTitle: 'Bazaar Tour (Endless)', endlessSub: 'The endless rooftop run has ended.', endlessOver: 'Tour Ended!', dist: 'Distance', endlessBest: 'Endless Tour Record', endlessUnlockedToast: 'Endless Tour mode unlocked!', endlessGate: '{d} m Reached!'
   }
 };
 const tx = (k, v) => {
@@ -1459,7 +1474,8 @@ function stepPlayer(dt, inp) {
   if (wasG && P.gS && P.gS.mv) P.x += P.gS.dx;       // ride the sliding plank
 
   const steep = P.sliding;
-  const sp = RUN * (P.slideT > 0 ? 1.35 : 1);
+  const baseRun = (L && L.endless) ? (RUN * L.speedMult) : RUN;
+  const sp = baseRun * (P.slideT > 0 ? 1.35 : 1);
   const mv = Math.hypot(inp.mx, inp.mz) > 0.05;
   const acc = wasG ? (steep ? 10 : (mv ? 55 : 45)) : (mv ? 22 : 4);
   P.vx = approach(P.vx, inp.mx * sp, acc * dt);
@@ -1576,11 +1592,17 @@ function postStep() {
   }
   for (const c of W.checks) {
     if (!c.hit && P.z <= c.z) {
-      c.hit = true; L.respawn = c; AUDIO.check();
-      // split: elapsed time at this gate against its target; the best split per gate is kept per level
-      L.splits[c.i] = L.time;
-      const d = L.time - c.target;
-      toast(tx('gate') + ' ' + (c.i + 1) + ': ' + (d >= 0 ? '+' : '-') + Math.abs(d).toFixed(1) + ' s', d <= 0 ? 'good' : 'info');
+      c.hit = true;
+      if (L && L.endless) {
+        AUDIO.check();
+        toast(tx('endlessGate', { d: Math.floor(L.distance) }), 'good');
+      } else {
+        L.respawn = c; AUDIO.check();
+        // split: elapsed time at this gate against its target; the best split per gate is kept per level
+        L.splits[c.i] = L.time;
+        const d = L.time - c.target;
+        toast(tx('gate') + ' ' + (c.i + 1) + ': ' + (d >= 0 ? '+' : '-') + Math.abs(d).toFixed(1) + ' s', d <= 0 ? 'good' : 'info');
+      }
     }
   }
   if (P.grounded) {
@@ -1590,11 +1612,15 @@ function postStep() {
   }
   if (W.sign && !SIGNS[LI] && Math.hypot(P.x - W.sign.x, P.z - W.sign.z) < 1.8 && Math.abs(P.y - W.sign.y) < 2.2) collectSign();
   const gx = P.x, gz = P.z - L.catZ;
-  if (gx * gx + gz * gz < CAT_R2) { finishLevel(); return; }
+  if (!L.endless && gx * gx + gz * gz < CAT_R2) { finishLevel(); return; }
   if (P.y < TOP_Y && P.dead <= 0) kill();
 }
 
 function kill() {
+  if (L && L.endless) {
+    finishEndless();
+    return;
+  }
   P.dead = DEATH_T; P.rope = null;
   L.falls++;
   L.fallT = 6;   // a fall stretches the cat's lead to 13 for a while
@@ -1644,8 +1670,8 @@ function updateLead(dt) {
 // The cat keeps ahead of the runner by its lead, never beyond the goal, and runs at most 9 units/s.
 function updateCat(dt) {
   const target = Math.max(W.goal.z, P.z - L.lead);
-  const vmax = L.slowT > 0 ? 3.5 : 9;   // tripped on spilled goods
-  L.catZ += Math.max(-vmax * dt, Math.min(9 * dt, target - L.catZ));
+  const vmax = (L.slowT > 0 ? 3.5 : 9) * (L.endless ? L.speedMult : 1);
+  L.catZ += Math.max(-vmax * dt, Math.min(vmax * dt, target - L.catZ));
   // even tripped, the cat scrambles on before the runner is within 5 units: the catch stays at the goal only
   L.catZ = Math.max(W.goal.z, Math.min(L.catZ, P.z - 5));
 }
@@ -1710,6 +1736,12 @@ function simStep(dt) {
   if (P.rope) ropeStep(dt, inp);
   else stepPlayer(dt, inp);
   postStep();
+  if (L && L.endless) {
+    L.distance = Math.max(0, -P.z + W.spawn.z);
+    L.difficulty = Math.min(5, Math.floor(L.distance / 120));
+    L.speedMult = 1.0 + Math.min(0.65, (L.distance / 500) * 0.35);
+    updateEndlessChunks();
+  }
   if (mode === 'play') { updateLead(dt); updateCat(dt); }
 }
 
@@ -1779,12 +1811,17 @@ world.add(player.g, ghost.g, cat.g, ring);
 /* ---------- far backdrop: street, Golden Horn, skyline and minarets (built once) ---------- */
 // The roofscape beside the path, at roof height: a flat roof plane, square blocks, a stone drum under each
 // dome and gutter lines between blocks. Each kind is one InstancedMesh; minarets stand far off, vertical.
+let backdropStreet = null, backdropRoofs = [], backdropZ = 0;
+const backdropGroup = new THREE.Group();
+scene.add(backdropGroup);
 (function buildBackdrop() {
   const street = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), M.street);
   street.rotation.x = -Math.PI / 2; street.position.set(0, -14, -200); scene.add(street);
+  backdropStreet = street;
   for (const [x0, x1] of [[6, 460], [-460, -6]]) {
     const roof = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 620), M.roofField);
     roof.rotation.x = -Math.PI / 2; roof.position.set((x0 + x1) / 2, -0.05, -250); scene.add(roof);
+    backdropRoofs.push(roof);
   }
   const horn = new THREE.Mesh(new THREE.PlaneGeometry(900, 200), M.water);
   horn.rotation.x = -Math.PI / 2; horn.position.set(0, -2.7, -660); scene.add(horn);
@@ -1833,14 +1870,14 @@ world.add(player.g, ghost.g, cat.g, ring);
   for (const im of [blocks, drums, domes]) {
     im.instanceMatrix.needsUpdate = true;
     im.instanceColor.needsUpdate = true;
-    scene.add(im);
+    backdropGroup.add(im);
   }
   const domeInk = new THREE.InstancedMesh(domes.geometry, INK_WORLD, N);
   domeInk.instanceMatrix = domes.instanceMatrix;
-  scene.add(domeInk);
+  backdropGroup.add(domeInk);
   finials.count = nf;
   finials.instanceMatrix.needsUpdate = true;
-  if (nf) { finials.instanceColor.needsUpdate = true; scene.add(finials); }
+  if (nf) { finials.instanceColor.needsUpdate = true; backdropGroup.add(finials); }
 
   // dark gutters: along the rows and along the block columns
   const gut = [];
@@ -1856,7 +1893,7 @@ world.add(player.g, ghost.g, cat.g, ring);
   }
   const gmerged = mergeGeometries(gut, false);
   for (const g of gut) g.dispose();
-  if (gmerged) scene.add(new THREE.Mesh(gmerged, M.vc));
+  if (gmerged) backdropGroup.add(new THREE.Mesh(gmerged, M.vc));
 
   // minarets: vertical shaft, balcony ring, tapering cap; far enough off the path to look upright
   const parts = [];
@@ -1874,7 +1911,7 @@ world.add(player.g, ghost.g, cat.g, ring);
   }
   const g = mergeGeometries(parts, false);
   for (const p of parts) p.dispose();
-  if (g) scene.add(new THREE.Mesh(g, M.vc));
+  if (g) backdropGroup.add(new THREE.Mesh(g, M.vc));
 })();
 
 function pivot(parent, x, y) { const g = new THREE.Group(); g.position.set(x, y, 0); parent.add(g); return g; }
@@ -1977,6 +2014,222 @@ function setStallMatrix(st, i) {
   dummy.scale.set(1, 1, 1);
   dummy.updateMatrix();
   stallMesh.setMatrixAt(i, dummy.matrix);
+}
+
+/* ---------- endless procedural runner mode (Çarşı Turu) ---------- */
+let endlessChunks = [];
+let endlessCursor = { z: 0, h: 0 };
+let endlessSeed = 12345;
+let endlessLokMesh = null;
+
+function nextEndlessRnd() {
+  endlessSeed = (endlessSeed + 0x6D2B79F5) >>> 0;
+  let t = endlessSeed;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+function parseChunkTokens(layoutStr, startZ, startH, rnd) {
+  const cSurf = [], cLines = [], cLok = [], cChecks = [], cPerch = [], cGusts = [];
+  let z = startZ, h = startH, lastRoof = null;
+  const roof = (len, o) => {
+    const s = Object.assign({ t: 'box', x0: -6, x1: 6, z0: z - len, z1: z, top: h, kind: 'stone', on: true }, o || {});
+    cSurf.push(s); z -= len; lastRoof = s; return s;
+  };
+  for (const tok of layoutStr.trim().split(/\s+/)) {
+    const c = tok[0], n = parseFloat(tok.slice(1)) || 0;
+    if (c === 'R') roof(n);
+    else if (c === 'B') roof(n, { brk: true, kind: 'tile', st: 0, t0: 0, t1: 0, fv: 0, mesh: null });
+    else if (c === 'O') {
+      const s = roof(n);
+      cSurf.push({ t: 'dome', cx: 0, cz: s.z0 + n / 2, R: Math.min(n / 2, 5.5), base: h, H: 3.2, on: true });
+    }
+    else if (c === 'M') {
+      const ph = rnd() * 6.28;
+      roof(n, { mv: true, kind: 'wood', x0: -2, x1: 2, bx0: -2, bx1: 2, amp: 1.5, spd: 0.9, ph, off: 0, dx: 0, prev: 1.5 * Math.sin(ph), mesh: null });
+    }
+    else if (c === 'G') z -= n;
+    else if (c === 'U') h = Math.min(3, h + n);
+    else if (c === 'D') h = Math.max(-2, h - n);
+    else if (c === 'L') { cLines.push({ x: 0, y: h + 2.5, za: z, zb: z - n, h }); z -= n; }
+    else if (c === 'k') {
+      for (let i = 0; i < n; i++) {
+        const arc = n > 1 ? 0.9 * Math.sin(Math.PI * (i + 0.5) / n) : 0;
+        cLok.push({ x: (rnd() - 0.5) * 2.2, y: h + 1.3 + arc, z: z - 0.75 - i * 1.5, got: false });
+      }
+    }
+    else if (c === 'C' && lastRoof) cChecks.push({ x: 0, y: lastRoof.top, z: lastRoof.z1 - 1.5, hit: false });
+    else if (c === 'P') { for (let i = 0; i < n; i++) cPerch.push({ x: (rnd() - 0.5) * 6, y: h, z: z + 2 + rnd() * 2, h, fly: 0, flyV: [0, 0], g: null }); }
+    else if (c === 'W') cGusts.push({ z0: z - n, z1: z, dir: rnd() < 0.5 ? -1 : 1, ph: rnd() * 6.28 });
+  }
+  return { startZ, z, h, surf: cSurf, lines: cLines, lok: cLok, checks: cChecks, perch: cPerch, gusts: cGusts };
+}
+
+function pickEndlessTokens(chunkIdx, diff, rnd) {
+  if (chunkIdx === 0) return 'R16 k3 G2 R14 k3 G2.5 R12';
+  let s = 'R10 ';
+  const numSegs = 2 + Math.floor(rnd() * 2);
+  for (let i = 0; i < numSegs; i++) {
+    const roll = rnd();
+    const hMod = (rnd() < 0.22) ? (rnd() < 0.5 ? 'U1 ' : 'D1 ') : '';
+    s += hMod;
+
+    if (i === 0 && chunkIdx % 3 === 0) {
+      s += 'C ';
+    }
+
+    if (diff === 0) {
+      if (roll < 0.35) s += 'G2 R12 k3 ';
+      else if (roll < 0.65) s += 'G2.5 O10 k3 G2 R12 ';
+      else if (roll < 0.85) s += 'G2 M4 G2 R12 ';
+      else s += 'G2.5 B8 G2 R12 ';
+    } else if (diff === 1) {
+      if (roll < 0.25) s += 'G3 O12 G2.5 R10 k3 ';
+      else if (roll < 0.50) s += 'G2.5 B8 G2.5 R10 ';
+      else if (roll < 0.75) s += 'G2.5 M4 G2.5 R12 k3 ';
+      else s += 'G3 B8 G2 M4 R10 ';
+    } else if (diff === 2) {
+      if (roll < 0.25) s += 'G3 M4 G2 M4 R10 k4 ';
+      else if (roll < 0.50) s += 'G3 O10 G2.5 B8 G2.5 R10 ';
+      else if (roll < 0.75) s += 'W12 G3 R10 k3 G3 R10 ';
+      else s += 'G3 B8 G3 B6 G2 R12 ';
+    } else {
+      if (roll < 0.25) s += 'G3.5 M4 G2.5 B8 G2.5 R10 ';
+      else if (roll < 0.50) s += 'G3.5 O12 G3 M4 G2.5 R10 ';
+      else if (roll < 0.75) s += 'W10 G3 B8 G3 B8 G2.5 R10 ';
+      else s += 'G3.5 M5 G2.5 M4 G3 O10 R10 ';
+    }
+  }
+  return s.trim();
+}
+
+function buildChunkRoofGeom(s, statics, rnd) {
+  const STONE = [0xd7bf9a, 0xcaa77c, 0xe2cba3, 0xbf9c70, 0xd9b68a];
+  const COBBLE = [0xb59a72, 0xa68b63, 0xc2a882, 0x9c8058, 0xb8a07a];
+  statics.push(boxG(s.x0, s.x1, s.top - 7, s.top - 0.4, s.z0, s.z1, STONE[Math.floor(rnd() * STONE.length)]));
+  const zl = (s.z1 - s.z0) / 4;
+  for (let q = 0; q < 4; q++) {
+    statics.push(boxG(s.x0 + 0.22, s.x1 - 0.22, s.top - 0.4, s.top, s.z0 + q * zl, s.z0 + (q + 1) * zl, COBBLE[Math.floor(rnd() * COBBLE.length)]));
+  }
+  statics.push(boxG(s.x0 + 0.22, s.x0 + 0.6, s.top - 0.4, s.top + 0.01, s.z0, s.z1, 0x5b4a3a));
+  statics.push(boxG(s.x1 - 0.6, s.x1 - 0.22, s.top - 0.4, s.top + 0.01, s.z0, s.z1, 0x5b4a3a));
+  statics.push(boxG(s.x0, s.x1, s.top, s.top + 0.14, s.z0, s.z0 + 0.22, 0xf3e6cc));
+  statics.push(boxG(s.x0, s.x1, s.top, s.top + 0.14, s.z1 - 0.22, s.z1, 0xf3e6cc));
+  statics.push(boxG(s.x0, s.x0 + 0.22, s.top, s.top + 0.14, s.z0, s.z1, 0xf3e6cc));
+  statics.push(boxG(s.x1 - 0.22, s.x1, s.top, s.top + 0.14, s.z0, s.z1, 0xf3e6cc));
+  statics.push(boxG(s.x0 - 0.03, s.x0 + 0.01, s.top - 1.0, s.top - 0.6, s.z0, s.z1, 0x8f6f4c));
+  statics.push(boxG(s.x1 - 0.01, s.x1 + 0.03, s.top - 1.0, s.top - 0.6, s.z0, s.z1, 0x8f6f4c));
+}
+
+function createEndlessChunkMesh(parsed, rnd) {
+  const statics = [];
+  const dynMeshes = [];
+  for (const s of parsed.surf) {
+    if (s.t === 'dome') {
+      statics.push(domeG(s, COL.lead));
+      if (rnd() < 0.4) statics.push(blobG(s.cx, s.base + s.H + 0.25, s.cz, 0.2, 0.5, 0.2, 0xE8B04B));
+    } else if (s.mv) {
+      const geo = new THREE.BoxGeometry(s.bx1 - s.bx0, 0.5, s.z1 - s.z0);
+      const m = new THREE.Mesh(geo, M.wood);
+      m.position.set(0, s.top - 0.25, (s.z0 + s.z1) / 2);
+      m.castShadow = true; m.receiveShadow = true;
+      world.add(m); s.mesh = m; dynMeshes.push(m);
+    } else if (s.brk) {
+      const geo = new THREE.BoxGeometry(12, 0.5, s.z1 - s.z0);
+      const m = new THREE.Mesh(geo, M.tile);
+      m.position.set(0, s.top - 0.25, (s.z0 + s.z1) / 2);
+      m.castShadow = true; m.receiveShadow = true;
+      world.add(m); s.mesh = m; dynMeshes.push(m);
+    } else {
+      buildChunkRoofGeom(s, statics, rnd);
+    }
+  }
+  for (const c of parsed.checks) {
+    const hx = 5.3;
+    statics.push(boxG(-hx - 0.35, -hx + 0.35, c.y, c.y + 3.4, c.z - 0.6, c.z + 0.6, COL.stone2));
+    statics.push(boxG(hx - 0.35, hx + 0.35, c.y, c.y + 3.4, c.z - 0.6, c.z + 0.6, COL.stone2));
+    statics.push(boxG(-hx - 0.35, hx + 0.35, c.y + 3.4, c.y + 3.95, c.z - 0.6, c.z + 0.6, COL.stone));
+    statics.push(boxG(-0.5, 0.5, c.y + 2.95, c.y + 3.95, c.z + 0.6, c.z + 0.66, COL.teal));
+  }
+  let mesh = null, inkMesh = null;
+  const merged = mergeGeometries(statics, false);
+  if (merged) {
+    mesh = new THREE.Mesh(merged, M.vc);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    inkMesh = new THREE.Mesh(merged, INK_WORLD);
+    world.add(mesh, inkMesh);
+  }
+  for (const g of statics) g.dispose();
+  return { mesh, inkMesh, dynMeshes };
+}
+
+function addEndlessChunk() {
+  const diff = L ? L.difficulty : 0;
+  const chunkIdx = L ? L.chunkSeq++ : 0;
+  const tokens = pickEndlessTokens(chunkIdx, diff, nextEndlessRnd);
+  const parsed = parseChunkTokens(tokens, endlessCursor.z, endlessCursor.h, nextEndlessRnd);
+  endlessCursor.z = parsed.z;
+  endlessCursor.h = parsed.h;
+
+  const { mesh, inkMesh, dynMeshes } = createEndlessChunkMesh(parsed, nextEndlessRnd);
+
+  const chunk = {
+    id: chunkIdx,
+    zStart: parsed.startZ,
+    zEnd: parsed.z,
+    mesh,
+    inkMesh,
+    dynMeshes,
+    surfs: parsed.surf,
+    loks: parsed.lok,
+    checks: parsed.checks,
+    gusts: parsed.gusts
+  };
+
+  for (const s of parsed.surf) SURF.push(s);
+  W.surf = SURF;
+  for (const l of parsed.lok) W.lok.push(l);
+  for (const c of parsed.checks) W.checks.push(c);
+  for (const g of parsed.gusts) W.gusts.push(g);
+
+  endlessChunks.push(chunk);
+}
+
+function disposeChunk(chunk) {
+  if (chunk.mesh) { world.remove(chunk.mesh); if (chunk.mesh.geometry) chunk.mesh.geometry.dispose(); }
+  if (chunk.inkMesh) { world.remove(chunk.inkMesh); }
+  for (const dm of chunk.dynMeshes) { world.remove(dm); if (dm.geometry) dm.geometry.dispose(); }
+  SURF = SURF.filter(s => !chunk.surfs.includes(s));
+  W.surf = SURF;
+  W.lok = W.lok.filter(l => !chunk.loks.includes(l));
+  if (W.gusts && chunk.gusts) W.gusts = W.gusts.filter(g => !chunk.gusts.includes(g));
+  if (W.checks && chunk.checks) W.checks = W.checks.filter(c => !chunk.checks.includes(c));
+}
+
+function disposeAllChunks() {
+  for (const ch of endlessChunks) disposeChunk(ch);
+  endlessChunks.length = 0;
+  if (endlessLokMesh) {
+    world.remove(endlessLokMesh);
+    endlessLokMesh.dispose();
+    endlessLokMesh = null;
+  }
+}
+
+function updateEndlessChunks() {
+  let minZ = 0;
+  for (const ch of endlessChunks) if (ch.zEnd < minZ) minZ = ch.zEnd;
+  if (P.z < minZ + 160) {
+    addEndlessChunk();
+  }
+  for (let i = endlessChunks.length - 1; i >= 0; i--) {
+    const ch = endlessChunks[i];
+    if (ch.zEnd > P.z + 90) {
+      disposeChunk(ch);
+      endlessChunks.splice(i, 1);
+    }
+  }
 }
 
 function buildLevel(def) {
@@ -2264,18 +2517,25 @@ function buildLevel(def) {
 /* ---------- visuals ---------- */
 const dummy = new THREE.Object3D();
 function updateLokMatrices(t) {
-  if (!lokMesh || !L) return;
+  const mesh = (L && L.endless) ? endlessLokMesh : lokMesh;
+  if (!mesh || !L) return;
   const still = calm();   // reduce motion: the lokum pieces neither bob nor spin
-  for (let i = 0; i < W.lok.length; i++) {
+  const n = Math.min(mesh.count, W.lok.length);
+  for (let i = 0; i < n; i++) {
     const k = W.lok[i];
     dummy.position.set(k.x, k.y + (still ? 0 : Math.sin(t * 2.4 + i) * 0.12), k.z);
     dummy.rotation.set(still ? i : t * 0.8 + i, still ? 0 : t * 1.1, 0);
     const s = k.got ? 0.0001 : 1;
     dummy.scale.set(s, s, s);
     dummy.updateMatrix();
-    lokMesh.setMatrixAt(i, dummy.matrix);
+    mesh.setMatrixAt(i, dummy.matrix);
   }
-  lokMesh.instanceMatrix.needsUpdate = true;
+  for (let i = n; i < mesh.count; i++) {
+    dummy.scale.set(0.0001, 0.0001, 0.0001);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
 }
 
 const PMAX = 420;
@@ -2594,6 +2854,14 @@ function frameVisuals(dt, now) {
   updateSun();
   sky.position.copy(camera.position);
   moon.position.copy(camera.position).addScaledVector(MOON_DIR, 300);
+  if (L && L.endless) {
+    if (backdropStreet) backdropStreet.position.z = P.z - 200;
+    for (const r of backdropRoofs) r.position.z = P.z - 250;
+    if (backdropGroup && P.z < backdropZ - 300) {
+      backdropZ -= 613.6;
+      backdropGroup.position.z = backdropZ;
+    }
+  }
 }
 
 /* ---------- first-encounter hints: once per type (SAVE.seen), placed at the obstacle, never blocks movement ---------- */
@@ -2675,6 +2943,18 @@ let hudCache = {};
 function updateHud() {
   if (!L) return;
   const set = (k, v) => { if (hudCache[k] !== v) { hudCache[k] = v; el(k).textContent = v; } };
+  if (L.endless) {
+    set('hLvl', '∞');
+    set('hTime', fmt(L.time));
+    set('hLok', String(L.lokGot));
+    set('hDist', Math.floor(L.distance) + ' m');
+    if (hudCache.stallOn !== (L.stalls > 0)) { hudCache.stallOn = L.stalls > 0; el('hStall').hidden = !hudCache.stallOn; }
+    set('hStallN', String(L.stalls));
+    const chain = L.combo >= 2 && L.time - L.lastTop <= STALL_WIN ? '×' + L.combo : '';
+    if (hudCache.chain !== chain) { hudCache.chain = chain; el('hCombo').textContent = chain; el('hCombo').hidden = !chain; }
+    if (hudCache.stars !== 'endless') { hudCache.stars = 'endless'; el('hStars').innerHTML = ''; }
+    return;
+  }
   set('hLvl', String(L.index + 1));
   set('hTime', fmt(L.time));
   set('hLok', L.lokGot + '/' + L.lokTotal);
@@ -2685,8 +2965,11 @@ function updateHud() {
   if (hudCache.stars !== (L.lokGot + ':' + (L.time <= L.par) + ':' + L.falls)) { hudCache.stars = L.lokGot + ':' + (L.time <= L.par) + ':' + L.falls; renderHudStars(); }
 }
 function applyHudLabels() {
-  document.querySelector('#hud .stat small').textContent = tx('level') + ' ';
-  document.querySelectorAll('#hud .stat small')[1].textContent = tx('time') + ' ';
+  const statSmalls = document.querySelectorAll('#hud .stat small');
+  if (statSmalls[0]) statSmalls[0].textContent = tx('level') + ' ';
+  const distSmall = document.querySelector('#hDistWrap small');
+  if (distSmall) distSmall.textContent = tx('dist') + ' ';
+  if (statSmalls[1]) statSmalls[1].textContent = tx('time') + ' ';
   el('bPause').innerHTML = ICON.pause; el('bPause').setAttribute('aria-label', tx('hudPause'));
   el('bSound').innerHTML = (S.muteM && S.muteX) ? ICON.mute : ICON.sound; el('bSound').setAttribute('aria-label', tx('hudSound'));
   el('bLang').textContent = S.lang === 'tr' ? 'EN' : 'TR'; el('bLang').setAttribute('aria-label', tx('language'));
@@ -2827,6 +3110,16 @@ function renderTitleBest() {
   const t = el('tBest');
   t.innerHTML = tx('best') + ': <b>' + total + ' / 30</b> · ' + cleared + ' / 10';
   el('bCont').hidden = cleared === 0;
+  const bestEnd = getEndlessBest();
+  const elEnd = el('tEndless');
+  if (elEnd) {
+    if (bestEnd > 0 || DONE[9]) {
+      elEnd.hidden = false;
+      elEnd.innerHTML = tx('endlessBest') + ': <b>' + bestEnd + ' m</b>';
+    } else {
+      elEnd.hidden = true;
+    }
+  }
   if (window.Arena) {
     const d = Arena.daily();
     el('tDaily').textContent = tx('dailyLevel', { n: (d.seed % LEVELS.length) + 1 + '. ' + lvName(d.seed % LEVELS.length) }) + ' · ' + (d.done ? tx('dailyDone') + ' · ' : '') + tx('dailyLine', { s: d.streak, b: d.best });
@@ -2857,6 +3150,42 @@ function showResult(stars, r) {
   focusFirst('scResult');
 }
 
+function finishEndless() {
+  if (!L || L.done) return;
+  L.done = true;
+  mode = 'result';
+  AUDIO.fall();
+  const dist = Math.max(0, Math.floor(L.distance));
+  const prevBest = getEndlessBest();
+  const record = dist > prevBest;
+  if (record && !FLAG.auto) {
+    saveEndlessBest(dist);
+  }
+  LAST_RESULT = { endless: true, dist, prevBest: Math.max(dist, prevBest), record, time: L.time, lok: L.lokGot };
+  showEndlessResult(LAST_RESULT);
+  if (window.Arena && Arena.complete) Arena.complete({ mount: el('scResult').querySelector('.col') });
+}
+
+function showEndlessResult(r) {
+  el('rTitle').textContent = tx('endlessOver');
+  el('rSub').textContent = r.record ? tx('newRecord') : tx('endlessSub');
+  el('rStars').innerHTML = '';
+  const rows = [
+    [tx('dist'), r.dist + ' m'],
+    [tx('best'), r.prevBest + ' m'],
+    [tx('statLokum'), String(r.lok)],
+    [tx('statTime'), fmt(r.time)]
+  ];
+  el('rStats').innerHTML = rows.map(([a, b]) => '<li><span>' + a + '</span><b>' + b + '</b></li>').join('');
+  el('rMascot').hidden = FLAG.noassets;
+  el('rRecord').hidden = !r.record;
+  el('rNext').hidden = true;
+  el('rRetry').textContent = tx('retry');
+  el('rMap').textContent = tx('mainMenu');
+  show('scResult');
+  focusFirst('scResult');
+}
+
 function showEnding() {
   if (ghost) ghost.g.visible = false;
   const total = BESTLV.reduce((a, r) => a + (r ? r.stars : 0), 0);
@@ -2866,6 +3195,7 @@ function showEnding() {
     [tx('level') + ' 10 / 10', tx('clearedAll')]
   ].map(([a, b]) => '<li><span>' + a + '</span><b>' + b + '</b></li>').join('');
   el('eMascot').hidden = FLAG.noassets;
+  toast(tx('endlessUnlockedToast'), 'good');
   show('scEnding');
   AUDIO.meow();
   if (FLAG.auto) window.carsi.finished = true;
@@ -2885,6 +3215,12 @@ function startDaily() {
 function startLevel(i, keepDaily) {
   if (!keepDaily) DAILY = null;
   if (!DAILY && !unlocked(i)) { toast(tx('locked'), 'bad'); return; }
+  disposeAllChunks();
+  backdropZ = 0;
+  if (backdropGroup) backdropGroup.position.z = 0;
+  if (backdropStreet) backdropStreet.position.z = -200;
+  for (const r of backdropRoofs) r.position.z = -250;
+  if (el('hDistWrap')) el('hDistWrap').hidden = true;
   AUDIO.start();
   LI = i;
   const fresh = loadGhosts();
@@ -2900,8 +3236,108 @@ function startLevel(i, keepDaily) {
   updateHud();
 }
 
+function startEndless() {
+  DAILY = null;
+  AUDIO.start();
+  mode = 'play';
+  for (const m of cur.meshes) { world.remove(m); if (m.geometry) m.geometry.dispose(); }
+  if (cur.stall) for (const m of cur.stall) world.remove(m);
+  if (lokMesh) { world.remove(lokMesh); lokMesh.dispose(); }
+  for (const b of birds) { world.remove(b.g); b.g.geometry.dispose(); }
+  birds.length = 0;
+  for (const g of cur.geo) g.dispose();
+  cur = { geo: [], meshes: [] };
+
+  disposeAllChunks();
+
+  W = {
+    surf: [],
+    lines: [],
+    lok: [],
+    checks: [],
+    perch: [],
+    gusts: [],
+    stalls: [],
+    goal: { x: 0, y: 0, z: -1e9 },
+    jw: { x: 4.2, y: 0, z: -1e9 },
+    len: 1e9,
+    spawn: { x: 0, y: 0, z: -2.5 }
+  };
+  SURF = W.surf;
+
+  L = {
+    def: { tr: 'Çarşı Turu', en: 'Bazaar Tour', seed: 42, night: false },
+    index: 10,
+    time: 0,
+    lokGot: 0,
+    falls: 0,
+    lokTotal: 0,
+    par: 9999,
+    done: false,
+    caughtT: 0,
+    respawn: W.spawn,
+    started: true,
+    flockT: 3,
+    flockIdx: 0,
+    catZ: -12,
+    lead: 10,
+    flow: 0,
+    fallT: 0,
+    hissT: -1e9,
+    splits: [],
+    stalls: 0,
+    combo: 0,
+    bestCombo: 0,
+    lastTop: -1e9,
+    slowT: 0,
+    endless: true,
+    distance: 0,
+    speedMult: 1.0,
+    difficulty: 0,
+    chunkSeq: 0
+  };
+
+  paintSky('dusk');
+
+  if (endlessLokMesh) { world.remove(endlessLokMesh); endlessLokMesh.dispose(); }
+  endlessLokMesh = new THREE.InstancedMesh(G.lok, M.lok, 120);
+  endlessLokMesh.castShadow = false;
+  world.add(endlessLokMesh);
+
+  P.x = W.spawn.x; P.y = W.spawn.y; P.z = W.spawn.z;
+  P.vx = P.vy = P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.dead = 0; P.airJump = 1;
+  P.anim = 0; P.stepAcc = 0; P.sliding = false; P.slideT = 0;
+
+  cat.g.visible = true;
+  if (ghost) ghost.g.visible = false;
+
+  endlessSeed = (Date.now() & 0x7fffffff) || 12345;
+  endlessCursor = { z: 0, h: 0 };
+  backdropZ = 0;
+  if (backdropGroup) backdropGroup.position.z = 0;
+
+  for (let i = 0; i < 4; i++) {
+    addEndlessChunk();
+  }
+
+  show(null);
+  el('hud').hidden = false;
+  el('touch').hidden = !(matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window);
+  el('foot').hidden = true;
+  if (el('hDistWrap')) el('hDistWrap').hidden = false;
+  hudCache = {};
+  applyHudLabels();
+  updateHud();
+}
+
 function openTitle() {
   if (ghost) ghost.g.visible = false;
+  disposeAllChunks();
+  backdropZ = 0;
+  if (backdropGroup) backdropGroup.position.z = 0;
+  if (backdropStreet) backdropStreet.position.z = -200;
+  for (const r of backdropRoofs) r.position.z = -250;
+  if (el('hDistWrap')) el('hDistWrap').hidden = true;
   mode = 'title';
   LI = 0;
   buildLevel(LEVELS[0]);
@@ -2914,6 +3350,12 @@ function openTitle() {
 
 function openMap() {
   if (ghost) ghost.g.visible = false;
+  disposeAllChunks();
+  backdropZ = 0;
+  if (backdropGroup) backdropGroup.position.z = 0;
+  if (backdropStreet) backdropStreet.position.z = -200;
+  for (const r of backdropRoofs) r.position.z = -250;
+  if (el('hDistWrap')) el('hDistWrap').hidden = true;
   mode = 'map';
   el('hud').hidden = true; el('touch').hidden = true; el('foot').hidden = false;
   renderMap();
@@ -2998,6 +3440,17 @@ function shareResult() {
     return Arena.share({ title: tx('name'), lines: [tx('ending'), tx('statTotal') + ': ' + total + ' / 30'], url });
   }
   if (!LAST_RESULT) return;
+  if (LAST_RESULT.endless) {
+    return Arena.share({
+      title: tx('name') + ' · ' + tx('endlessTitle'),
+      lines: [
+        tx('dist') + ': ' + LAST_RESULT.dist + ' m' + (LAST_RESULT.record ? ' (' + tx('newRecord') + ')' : ''),
+        tx('best') + ': ' + LAST_RESULT.prevBest + ' m',
+        tx('statLokum') + ': ' + LAST_RESULT.lok + ' · ' + tx('statTime') + ' ' + fmt(LAST_RESULT.time)
+      ],
+      url
+    });
+  }
   const r = LAST_RESULT.r, n = LAST_RESULT.stars.filter(Boolean).length;
   return Arena.share({ title: tx('name'), lines: [(DAILY ? tx('daily') + ' ' + DAILY.d.day + ' · ' : '') + (LI + 1) + '. ' + lvName(LI), tx('statStars') + ': ' + n + ' / 3 · ' + tx('statTime') + ' ' + fmt(r.time), tx('statLokum') + ': ' + r.lok + ' / ' + r.lokTotal], url });
 }
@@ -3048,7 +3501,10 @@ function applyLanguage() {
   syncSettings();
   if (mode === 'title') renderTitleBest();
   if (mode === 'map') renderMap();
-  if (mode === 'result' && LAST_RESULT) showResult(LAST_RESULT.stars, LAST_RESULT.r);
+  if (mode === 'result' && LAST_RESULT) {
+    if (LAST_RESULT.endless) showEndlessResult(LAST_RESULT);
+    else showResult(LAST_RESULT.stars, LAST_RESULT.r);
+  }
 }
 function setLang(l) { S.lang = l; persistSettings(); applyLanguage(); }
 function toggleLang() { setLang(S.lang === 'tr' ? 'en' : 'tr'); }
@@ -3059,17 +3515,18 @@ function soundIcon() { el('bSound').innerHTML = (S.muteM && S.muteX) ? ICON.mute
 /* ---------- events ---------- */
 el('bPlay').addEventListener('click', () => { AUDIO.click(); startLevel(DONE.some(Boolean) ? nextUnlockedIndex() : 0); });
 el('bCont').addEventListener('click', () => { AUDIO.click(); openMap(); });
+if (el('bEndless')) el('bEndless').addEventListener('click', () => { AUDIO.click(); startEndless(); });
 el('bTSettings').addEventListener('click', openSettings);
 el('bMapBack').addEventListener('click', openTitle);
 el('bMapSettings').addEventListener('click', openSettings);
 el('bResume').addEventListener('click', resumeGame);
-el('bRestart').addEventListener('click', () => { startLevel(LI, true); });
+el('bRestart').addEventListener('click', () => { if (L && L.endless) startEndless(); else startLevel(LI, true); });
 el('bPSettings').addEventListener('click', openSettings);
 el('bPMenu').addEventListener('click', openTitle);
 el('bSetClose').addEventListener('click', closeSettings);
 el('rNext').addEventListener('click', () => { AUDIO.click(); nextLevel(); });
-el('rRetry').addEventListener('click', () => { AUDIO.click(); startLevel(LI, true); });
-el('rMap').addEventListener('click', openMap);
+el('rRetry').addEventListener('click', () => { AUDIO.click(); if (L && L.endless) startEndless(); else startLevel(LI, true); });
+el('rMap').addEventListener('click', () => { if (L && L.endless) openTitle(); else openMap(); });
 el('eMenu').addEventListener('click', openTitle);
 el('eAgain').addEventListener('click', () => startLevel(0));
 el('bPause').addEventListener('click', () => { if (mode === 'play') pauseGame(); else if (mode === 'pause') resumeGame(); });
@@ -3217,6 +3674,10 @@ window.carsi = {
   get mode() { return mode; },
   get level() { return LI + 1; },
   get time() { return L ? L.time : 0; },
+  get distance() { return L && L.endless ? Math.floor(L.distance) : 0; },
+  get endless() { return !!(L && L.endless); },
+  get endlessBest() { return getEndlessBest(); },
+  get endlessSpeed() { return L && L.endless ? +L.speedMult.toFixed(2) : 1; },
   get lokum() { return L ? L.lokGot : 0; },
   get lokumTotal() { return L ? L.lokTotal : 0; },
   get falls() { return L ? L.falls : 0; },
@@ -3251,6 +3712,7 @@ window.carsi = {
   errors,
   sim: carsiSim,
   setBot: v => { BOT = !!v; },
+  startEndless: () => startEndless(),
   // test hook: start any level directly (skips the unlock rule)
   build: i => {
     LI = i;
@@ -3278,8 +3740,18 @@ el('bPlay').disabled = false;
 renderTitleBest();
 requestAnimationFrame(t => { last = t; });
 requestAnimationFrame(frame);
-if (FLAG.auto) { if (Q.get('mode') === 'daily' && window.Arena) startDaily(); else startLevel(0); }
-else if (FLAG.sim) { startLevel(0); carsiSim(FLAG.sim); }
+if (FLAG.auto) {
+  if (Q.get('mode') === 'daily' && window.Arena) startDaily();
+  else if (Q.get('mode') === 'endless') startEndless();
+  else startLevel(0);
+}
+else if (FLAG.sim) {
+  if (Q.get('mode') === 'endless') { startEndless(); carsiSim(FLAG.sim); }
+  else { startLevel(0); carsiSim(FLAG.sim); }
+}
+else if (Q.get('mode') === 'endless') {
+  startEndless();
+}
 </script>
 </body>
 </html>
