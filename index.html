@@ -1200,7 +1200,7 @@ const LOOK = [
 ];
 
 /* ---------- constants ---------- */
-const STEP = 1 / 120, GRAV = 30, JUMP_V = 11.4, DJ_V = 9.6, RUN = 7.6, PR = 0.34, SNAP = 0.45, COYOTE = 0.12, JBUF = 0.13;
+const STEP = 1 / 120, GRAV = 30, JUMP_V = 11.4, DJ_V = 9.6, RUN = 7.6, PR = 0.34, SNAP = 0.45, COYOTE = 0.12, JBUF = 0.10;
 const ROPE_SPEED = 9, DEATH_T = 0.7, STEP_WALL = 0.45, CAT_R2 = 5.8, LOK_R2 = 1.2;
 const TOP_Y = -9;
 // Zincir Tezgâh (stall chain): market stalls stand on the flat roofs. Running (or sliding) into one topples it;
@@ -1455,6 +1455,8 @@ function windAt(z) {
 
 /* ---------- player and cat state ---------- */
 const P = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, grounded: false, gS: null, coyote: 0, jumpBuf: 0, airJump: 1,
+  lastGroundedTime: -1e9, lastJumpTime: -1e9,
+  get lastGrounded() { return this.lastGroundedTime; }, get groundedTime() { return this.lastGroundedTime; }, get jumpBufferTime() { return this.lastJumpTime; },
   slideT: 0, rope: null, noRope: 0, dead: 0, anim: 0, stepAcc: 0, sliding: false, lastGust: 0 };
 let L = null;            // level run state
 let LI = 0;              // current level index
@@ -1467,9 +1469,18 @@ let camYaw = 0, camManual = 0, camPos = new THREE.Vector3(), camLook = new THREE
 function approach(v, t, d) { return v < t ? Math.min(t, v + d) : Math.max(t, v - d); }
 
 function stepPlayer(dt, inp) {
+  const now = L ? L.time : 0;
   const wasG = P.grounded;
-  P.coyote = wasG ? COYOTE : P.coyote - dt;
-  P.jumpBuf = inp.jump ? JBUF : P.jumpBuf - dt;
+  if (wasG) P.lastGroundedTime = now;
+  if (inp.jump) P.lastJumpTime = now;
+
+  // Coyote time (120ms): allow jumping within 120ms of leaving a platform
+  const canCoyote = wasG || (now - P.lastGroundedTime <= COYOTE);
+  // Jump buffering (100ms): buffer jump inputs pressed 100ms before landing
+  const hasJumpBuffer = (now - P.lastJumpTime <= JBUF);
+
+  P.coyote = canCoyote ? Math.max(0, COYOTE - (now - P.lastGroundedTime)) : 0;
+  P.jumpBuf = hasJumpBuffer ? Math.max(0, JBUF - (now - P.lastJumpTime)) : 0;
   P.slideT = inp.slide && wasG ? 0.7 : Math.max(0, P.slideT - dt);
   if (wasG && P.gS && P.gS.mv) P.x += P.gS.dx;       // ride the sliding plank
 
@@ -1486,12 +1497,24 @@ function stepPlayer(dt, inp) {
   if (wasG && P.gS && P.gS.t === 'dome') domeSlide(dt, inp);
 
   let jumped = false;
-  if (P.jumpBuf > 0 && P.coyote > 0) {
-    P.vy = JUMP_V; P.grounded = false; P.coyote = 0; P.jumpBuf = 0; P.airJump = 1; jumped = true;
+  if (hasJumpBuffer && canCoyote) {
+    // Ground jump or coyote jump off a ledge within 120ms
+    P.vy = JUMP_V; P.grounded = false; P.coyote = 0; P.lastGroundedTime = -1e9;
+    P.jumpBuf = 0; P.lastJumpTime = -1e9; P.airJump = 1; jumped = true;
     AUDIO.jump(); FX.dust(P.x, P.y, P.z, 4, 0.6);
-  } else if (P.jumpBuf > 0 && P.airJump > 0 && !wasG) {
-    P.vy = DJ_V; P.airJump = 0; P.jumpBuf = 0; jumped = true;
-    AUDIO.flap(); FX.dust(P.x, P.y, P.z, 6, 0.9);
+  } else if (hasJumpBuffer && P.airJump > 0 && !wasG) {
+    // Air jump (double jump) - only if not landing on a surface within the buffer window (100ms)
+    let landingSoon = false;
+    if (P.vy <= 0) {
+      const gh = groundAt(P.x, P.z);
+      if (gh > -Infinity && (P.y - gh) <= (-P.vy * JBUF + 0.5 * GRAV * JBUF * JBUF + SNAP)) {
+        landingSoon = true;
+      }
+    }
+    if (!landingSoon) {
+      P.vy = DJ_V; P.airJump = 0; P.jumpBuf = 0; P.lastJumpTime = -1e9; jumped = true;
+      AUDIO.flap(); FX.dust(P.x, P.y, P.z, 6, 0.9);
+    }
   }
 
   if (!P.grounded) P.vy -= GRAV * dt;
@@ -1503,7 +1526,15 @@ function stepPlayer(dt, inp) {
   const h = groundAt(P.x, P.z);
   if (P.vy <= 0 && h > -Infinity && P.y <= h + (wasGround ? SNAP : 0)) {
     if (!wasGround && P.vy < -6) { AUDIO.land(); FX.dust(P.x, h, P.z, 8, 1.2); }
-    P.y = h; P.vy = 0; P.grounded = true; P.gS = gS; P.airJump = 1; P.coyote = COYOTE;
+    P.y = h; P.vy = 0; P.grounded = true; P.gS = gS; P.airJump = 1;
+    P.lastGroundedTime = now; P.coyote = COYOTE;
+
+    // If jump was buffered within 100ms before landing, execute jump immediately on touchdown
+    if (!wasGround && (now - P.lastJumpTime <= JBUF)) {
+      P.vy = JUMP_V; P.grounded = false; P.coyote = 0; P.lastGroundedTime = -1e9;
+      P.jumpBuf = 0; P.lastJumpTime = -1e9; P.airJump = 1;
+      AUDIO.jump(); FX.dust(P.x, P.y, P.z, 4, 0.6);
+    }
   } else {
     P.grounded = false; P.gS = null;
   }
@@ -1559,7 +1590,7 @@ function ropeStep(dt, inp) {
   const end = (r.dir < 0 && P.z <= r.zb) || (r.dir > 0 && P.z >= r.za);
   if (inp.jump || end) {
     P.vx = 0; P.vz = r.dir * ROPE_SPEED * 0.8; P.vy = inp.jump && !end ? 7.5 : 3;
-    P.rope = null; P.noRope = 0.45; P.grounded = false; P.coyote = 0; P.airJump = 1;
+    P.rope = null; P.noRope = 0.45; P.grounded = false; P.coyote = 0; P.lastGroundedTime = -1e9; P.jumpBuf = 0; P.lastJumpTime = -1e9; P.airJump = 1;
   }
 }
 
@@ -1640,6 +1671,7 @@ function respawn() {
   }
   P.x = c.x; P.z = c.z; P.y = c.y + 0.6;
   P.vx = 0; P.vy = 0; P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.airJump = 1;
+  P.coyote = 0; P.jumpBuf = 0; P.lastGroundedTime = -1e9; P.lastJumpTime = -1e9;
 }
 
 // Zincir Tezgâh: topple a stall; the combo grows while topples follow within STALL_WIN seconds.
@@ -2497,6 +2529,7 @@ function buildLevel(def) {
   };
   P.x = W.spawn.x; P.y = W.spawn.y; P.z = W.spawn.z;
   P.vx = P.vy = P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.dead = 0; P.airJump = 1;
+  P.coyote = 0; P.jumpBuf = 0; P.lastGroundedTime = -1e9; P.lastJumpTime = -1e9;
   P.anim = 0; P.stepAcc = 0; P.sliding = false; P.slideT = 0;
   cat.g.visible = true;
   ghostRec = [[+P.x.toFixed(2), +P.y.toFixed(2), +P.z.toFixed(2)]];
@@ -3306,6 +3339,7 @@ function startEndless() {
 
   P.x = W.spawn.x; P.y = W.spawn.y; P.z = W.spawn.z;
   P.vx = P.vy = P.vz = 0; P.grounded = false; P.gS = null; P.rope = null; P.noRope = 0; P.dead = 0; P.airJump = 1;
+  P.coyote = 0; P.jumpBuf = 0; P.lastGroundedTime = -1e9; P.lastJumpTime = -1e9;
   P.anim = 0; P.stepAcc = 0; P.sliding = false; P.slideT = 0;
 
   cat.g.visible = true;
@@ -3689,7 +3723,7 @@ window.carsi = {
   get splits() { return L ? L.splits.slice() : []; },
   get seen() { return Object.assign({}, SAVE.seen); },
   get goalZ() { return W && W.goal ? W.goal.z : null; },
-  get player() { return { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), vx: +P.vx.toFixed(2), vy: +P.vy.toFixed(2), vz: +P.vz.toFixed(2), grounded: P.grounded, dead: P.dead > 0, rope: !!P.rope }; },
+  get player() { return { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), vx: +P.vx.toFixed(2), vy: +P.vy.toFixed(2), vz: +P.vz.toFixed(2), grounded: P.grounded, dead: P.dead > 0, rope: !!P.rope, coyote: +P.coyote.toFixed(3), lastGroundedTime: +P.lastGroundedTime.toFixed(3) }; },
   get surfacesLoaded() { return SURF.length; },
   get catZ() { return L ? +L.catZ.toFixed(1) : null; },
   get stalls() { return L ? { total: W.stalls.length, toppled: L.stalls, combo: L.combo, bestCombo: L.bestCombo, slowT: +L.slowT.toFixed(2) } : null; },
