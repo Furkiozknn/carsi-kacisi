@@ -1,0 +1,17 @@
+{
+  "game": "carsi-kacisi",
+  "recorded": "2026-11-10T01:21:11.674Z",
+  "commit": "56f0930",
+  "entrySha": "97a0facb5249",
+  "run": "() => {\n      const C = window.carsi, out = [];\n      for (let i = 0; i < 10; i++) {\n        C.build(i); C.sim(240);\n        out.push({ end: C.mode, t: +C.time.toFixed(2), lok: C.lokum, falls: C.falls, stars: C.stars.filter(Boolean).length, top: C.stalls.toppled });\n      }\n      window.__gateOut = out;\n    }",
+  "metrics": {
+    "cleared": 10,
+    "stars": 25,
+    "lokum": 195,
+    "falls": 0,
+    "time": 521.92,
+    "toppled": 120,
+    "perLevel": "3232233223",
+    "gameErrors": 0
+  }
+}
