@@ -741,7 +741,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   </div>
 </header>
 
-<div id="toasts" aria-live="polite"></div>
+<div id="toasts" role="status" aria-live="polite"></div>
 <div id="hint" class="hint" hidden></div>
 <div id="notebook" class="notebook" hidden></div>
 
@@ -950,6 +950,7 @@ const TX = {
     name: 'Çarşı Kaçışı', sub: 'Çatılardan kaç, kediyi yakala.',
     how: 'Koş, zıpla, kubbelerden kay, çamaşır ipine tutun. Sokağa düşersen son kontrol noktasına dönersin.',
     keys: 'Hareket: WASD / ok tuşları · Zıpla: Boşluk (havada bir kez daha) · Kay: Shift · Duraklat: P / Esc · Ses: M / X · Dil: L',
+    keysTouch: 'Hareket: sol alttaki çubuk · Zıpla: Zıpla düğmesi (havada bir kez daha) · Kay: Kay düğmesi · Duraklat ve ses: üstteki düğmeler',
     play: 'Oyna', cont: 'Devam', settings: 'Ayarlar', resume: 'Devam et', restart: 'Yeniden başlat', mainMenu: 'Ana menü',
     loading: 'Yükleniyor…', loadFail: '3D motor yüklenemedi. three.js jsdelivr üzerinden indirildiği için internet bağlantısını kontrol edin.', toggle: 'Aç / Kapat',
     roofMap: 'Çatı haritası', next: 'Sonraki bölüm', retry: 'Tekrar dene', again: 'Baştan oyna', close: 'Kapat',
@@ -981,6 +982,7 @@ const TX = {
     name: 'Çarşı Kaçışı', sub: 'Run the rooftops, catch the thief cat.',
     how: 'Run, jump, slide down the domes, grab the laundry lines. Fall into the street and you return to the last checkpoint.',
     keys: 'Move: WASD / arrows · Jump: Space (once more in the air) · Slide: Shift · Pause: P / Esc · Sound: M / X · Language: L',
+    keysTouch: 'Move: the stick at the bottom left · Jump: the Jump button (once more in the air) · Slide: the Slide button · Pause and sound: the buttons at the top',
     play: 'Play', cont: 'Continue', settings: 'Settings', resume: 'Resume', restart: 'Restart', mainMenu: 'Main menu',
     loading: 'Loading…', loadFail: 'The 3D engine could not load. It is fetched from jsdelivr, so check your internet connection.', toggle: 'On / Off',
     roofMap: 'Roof map', next: 'Next level', retry: 'Try again', again: 'Play from the start', close: 'Close',
@@ -2120,10 +2122,11 @@ function buildLevel(def) {
 const dummy = new THREE.Object3D();
 function updateLokMatrices(t) {
   if (!lokMesh || !L) return;
+  const still = calm();   // reduce motion: the lokum pieces neither bob nor spin
   for (let i = 0; i < W.lok.length; i++) {
     const k = W.lok[i];
-    dummy.position.set(k.x, k.y + Math.sin(t * 2.4 + i) * 0.12, k.z);
-    dummy.rotation.set(t * 0.8 + i, t * 1.1, 0);
+    dummy.position.set(k.x, k.y + (still ? 0 : Math.sin(t * 2.4 + i) * 0.12), k.z);
+    dummy.rotation.set(still ? i : t * 0.8 + i, still ? 0 : t * 1.1, 0);
     const s = k.got ? 0.0001 : 1;
     dummy.scale.set(s, s, s);
     dummy.updateMatrix();
@@ -2191,10 +2194,11 @@ function updateParticles(dt) {
 
 /* ---------- camera ---------- */
 const CAM_D = 8, CAM_H = 5;
+const calm = () => !!(window.Arena && Arena.settings && Arena.settings.reducedMotion);   // kit "reduce motion": read live, visuals only (the sim never sees it)
 function updateCamera(dt) {
   if (mode === 'title' || mode === 'map') {
     const t = performance.now() / 1000;
-    const a = t * 0.12;
+    const a = calm() ? 0 : t * 0.12;   // reduce motion: the title camera holds still instead of orbiting
     const tx0 = W.spawn.x, tz0 = W.spawn.z;
     camPos.set(tx0 + Math.sin(a) * 9, 5, tz0 + Math.cos(a) * 9);
     camLook.set(tx0, 1.2, tz0 - 4);
@@ -2215,7 +2219,7 @@ function updateCamera(dt) {
   // look well ahead and only slightly down, so the cat ahead and the minarets stay upright on screen
   camLook.set(P.x - Math.sin(yaw) * 6, P.y + 0.6, P.z - Math.cos(yaw) * 6);
   // speed FOV: the view widens as the runner speeds up (a fast dome slide reaches the top of the range)
-  const boost = mode === 'play' ? Math.min(1, Math.max(0, (sp - 6) / 5)) : 0;
+  const boost = mode === 'play' && !calm() ? Math.min(1, Math.max(0, (sp - 6) / 5)) : 0;   // reduce motion: no speed FOV
   const fovWant = camBaseFov + 9 * boost;
   if (Math.abs(camera.fov - fovWant) > 0.05) { camera.fov += (fovWant - camera.fov) * (1 - Math.exp(-4 * dt)); camera.updateProjectionMatrix(); }
   camera.position.copy(camPos);
@@ -2291,8 +2295,9 @@ function frameVisuals(dt, now) {
     const close = mode === 'play' && !L.done && L.lead < 7.5;
     cat.head.rotation.y += ((close ? Math.PI : 0) - cat.head.rotation.y) * Math.min(1, dt * 6);
     if (close && now - L.hissT > 3500) { L.hissT = now; AUDIO.hiss(); }
-    ring.position.set(cx, cy + 1.25 + bob + Math.sin(t * 2) * 0.06, cz);
-    ring.rotation.y = t * 2.2;
+    const still = calm();   // reduce motion: the ring above the cat does not float or spin
+    ring.position.set(cx, cy + 1.25 + bob + (still ? 0 : Math.sin(t * 2) * 0.06), cz);
+    ring.rotation.y = still ? 0 : t * 2.2;
     if (L.done) {
       // ring glides from the runner's arms to the jeweller's hand
       const k = Math.min(1, Math.max(0, (t - L.caughtWall - 0.7) / 1.8));
@@ -2803,7 +2808,8 @@ function attachPerf() {
 function applyLanguage() {
   document.documentElement.lang = S.lang;
   if (window.Arena) Arena.lang(S.lang);
-  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = tx(n.dataset.t); });
+  const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;   // same test that shows #touch; there the key list names the on-screen controls
+  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = tx(touch && n.dataset.t === 'keys' ? 'keysTouch' : n.dataset.t); });
   el('tTitle') && (el('tTitle').textContent = tx('name'));
   el('foot').innerHTML = tx('footer', { m: MODEL }).replace('Claude Game Arena', '<a href="https://github.com/Furkiozknn" target="_blank" rel="noopener">Claude Game Arena</a>');
   document.title = tx('name');
@@ -2925,8 +2931,9 @@ function resize() {
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 // arena-kit: same pause when the tab is hidden (the game's own listener stays); 'resume' leaves the pause menu up.
-// The game has no reduced-motion flag of its own to map (only the CSS media query).
+// Reduce motion: calm() reads Arena.settings.reducedMotion live; switched on mid-run, the speed FOV drops back at once.
 if (window.Arena) Arena.on('pause', pauseGame);
+if (window.Arena) Arena.on('settings', () => { if (calm() && camera.fov !== camBaseFov) { camera.fov = camBaseFov; camera.updateProjectionMatrix(); } });
 
 /* ---------- main loop ---------- */
 let acc = 0, last = performance.now(), fpsN = 0, fpsT = 0, fps = 0;
