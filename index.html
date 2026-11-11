@@ -227,6 +227,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 
 /* touch controls: ergonomic translucent stick & tactile discs */
 #touch{position:fixed;left:0;right:0;bottom:0;height:44vh;z-index:15;pointer-events:none}
+#touch.autorun{top:calc(56px + var(--sa-t));height:auto;pointer-events:auto;touch-action:none}
 #stick{position:absolute;left:calc(18px + var(--sa-l));bottom:calc(22px + var(--sa-b));width:116px;height:116px;border-radius:50%;
   background:radial-gradient(circle,rgba(253,251,247,0.45) 0%,rgba(26,18,11,0.4) 100%);
   border:2.5px solid rgba(253,251,247,0.7);box-shadow:0 6px 20px rgba(0,0,0,0.25);
@@ -249,6 +250,22 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 15l-6 6-1.4-1.4 3.6-3.6H4v-2h11.2l-3.6-3.6L13 9z'/%3E%3C/svg%3E") no-repeat center/contain;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 15l-6 6-1.4-1.4 3.6-3.6H4v-2h11.2l-3.6-3.6L13 9z'/%3E%3C/svg%3E") no-repeat center/contain;margin-bottom:1px}
 #tSlide:active{background:var(--saffron);transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+
+/* one-hand auto-run touch zones */
+#touchAutoZone{position:absolute;inset:0;display:flex;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.touch-zone-left,.touch-zone-right{position:relative;flex:1 1 50%;height:100%;display:flex;align-items:flex-end;touch-action:none}
+.touch-zone-left{justify-content:flex-start;padding:0 0 calc(20px + var(--sa-b)) calc(18px + var(--sa-l))}
+.touch-zone-right{justify-content:flex-end;padding:0 calc(18px + var(--sa-r)) calc(20px + var(--sa-b)) 0}
+.touch-hint-pod{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;
+  background:rgba(253,251,247,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:2px solid var(--line);box-shadow:var(--shadow-sm);font-family:var(--font-display);font-size:12px;
+  font-weight:900;color:var(--ink2);pointer-events:none;transition:transform .12s ease,background .12s ease,border-color .12s ease,color .12s ease;
+  opacity:.88}
+.touch-hint-arrows{font-size:16px;line-height:1;color:var(--teal);letter-spacing:2px}
+.touch-hint-icon{font-size:13px;line-height:1;color:var(--saffron);display:inline-block;transition:transform .12s ease}
+.touch-zone-left.active .touch-hint-pod{background:var(--teal-light);border-color:var(--teal);color:var(--teal);transform:scale(1.05)}
+.touch-zone-right.active-jump .touch-hint-pod{background:var(--saffron);border-color:var(--line);color:var(--ink);transform:scale(1.06);box-shadow:0 3px 0 var(--line)}
+.touch-zone-right.active-slide .touch-hint-pod{background:var(--teal2);border-color:var(--line);color:var(--ink);transform:scale(1.06);box-shadow:0 3px 0 var(--line)}
 
 #dbg{position:fixed;left:8px;bottom:8px;z-index:40;margin:0;padding:6px 8px;font:12px/1.4 Consolas,monospace;color:#d6ffe9;
   background:rgba(0,0,0,.6);border-radius:8px;max-width:70vw;white-space:pre-wrap;pointer-events:none}
@@ -316,7 +333,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   #tSlide{width:50px;height:50px;bottom:calc(78px + var(--sa-b))}
 }
 @media (prefers-reduced-motion: reduce){
-  #touch,.toast,.hint,.notebook,.btn,.card,.stars-big svg.on,.combo{animation:none!important;transition:none!important}
+  #touch,.toast,.hint,.notebook,.btn,.card,.stars-big svg.on,.combo,.touch-hint-pod,.touch-zone-left,.touch-zone-right{animation:none!important;transition:none!important}
 }
 </style>
 <script>/*ARENA-KIT:BEGIN v1.1.0 sha256:3bea83137e26*/
@@ -841,6 +858,20 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   <div id="stick" aria-label="Move"><i></i></div>
   <button class="tbtn" id="tSlide" aria-label="Slide">K</button>
   <button class="tbtn" id="tJump" aria-label="Jump">Z</button>
+  <div id="touchAutoZone" hidden>
+    <div id="touchLeft" class="touch-zone-left" aria-label="Steer">
+      <div class="touch-hint-pod left" aria-hidden="true">
+        <span class="touch-hint-arrows">‹ ›</span>
+        <span class="touch-hint-txt" data-t="thSteer"></span>
+      </div>
+    </div>
+    <div id="touchRight" class="touch-zone-right" aria-label="Jump / Slide">
+      <div class="touch-hint-pod right" id="tRightPod" aria-hidden="true">
+        <span class="touch-hint-icon" id="tActionIcon">▲</span>
+        <span class="touch-hint-txt" id="tRightLabel" data-t="thJump"></span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- title -->
@@ -945,6 +976,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <div class="set-row"><span data-t="master"></span><input type="range" id="sMaster" min="0" max="1" step="0.01" aria-label="master"></div>
     <div class="set-row"><span data-t="music"></span><input type="range" id="sMusic" min="0" max="1" step="0.01" aria-label="music"></div>
     <div class="set-row"><span data-t="sfx"></span><input type="range" id="sSfx" min="0" max="1" step="0.01" aria-label="effects"></div>
+    <div class="set-row"><span data-t="autoRun"></span><div class="seg"><button class="btn sm" id="sAutoOff" aria-pressed="false" data-t="off"></button><button class="btn sm" id="sAutoOn" aria-pressed="false" data-t="on"></button></div></div>
     <div class="set-row"><span data-t="language"></span><div class="seg"><button class="btn sm" id="sTR" aria-pressed="false">TR</button><button class="btn sm" id="sEN" aria-pressed="false">EN</button></div></div>
     <div class="set-row"><span data-t="quality"></span><div class="seg"><button class="btn sm" id="sLow" aria-pressed="false" data-t="low"></button><button class="btn sm" id="sHigh" aria-pressed="false" data-t="high"></button></div></div>
     <div class="set-row"><span data-t="fullscreen"></span><div class="seg"><button class="btn sm" id="sFull" data-t="toggle"></button></div></div>
@@ -1017,12 +1049,17 @@ const KEY = { set: 'arena.carsi.settings', save: 'arena.carsi.save', best: 'aren
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return Object.assign({}, d, v ? JSON.parse(v) : {}); } catch (e) { return Object.assign({}, d); } }
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage blocked: play without saving */ } }
 
+const isTouchDevice = matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
 const S = lsGet(KEY.set, {
   master: 0.8, music: 0.6, sfx: 0.8,
   lang: (navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en',
   quality: matchMedia('(pointer: coarse)').matches ? 'low' : 'high',
-  muteM: false, muteX: false
+  muteM: false, muteX: false,
+  autoRun: isTouchDevice
 });
+if (typeof S.autoRun !== 'boolean') S.autoRun = isTouchDevice;
+if (Q.has('autorun')) S.autoRun = Q.get('autorun') !== '0' && Q.get('autorun') !== 'false';
+if (Q.has('noautorun')) S.autoRun = false;
 if (FLAG.lang === 'en' || FLAG.lang === 'tr') S.lang = FLAG.lang;
 if (FLAG.low) S.quality = 'low';
 
@@ -1081,6 +1118,8 @@ const TX = {
     footer: 'Claude Game Arena · {m} tarafından yapıldı', footerBy: 'Claude Game Arena',
     totalStars: 'Toplam', pausedNote: 'Oyun duraklatıldı',
     hudPause: 'Duraklat', hudSound: 'Ses', touchJump: 'Zıpla', touchSlide: 'Kay', moveLabel: 'Hareket', musicOn: 'Müzik açık', musicOff: 'Müzik kapalı',
+    autoRun: 'Otomatik Koşu', on: 'Açık', off: 'Kapalı', thSteer: 'Yön', thJump: 'Zıpla (Kaymak için basılı tut)', thSlide: 'Kayıyor',
+    keysTouchAuto: 'Otomatik Koşu · Yön: Parmağını sola/sağa kaydır · Zıpla: Sağ tarafa dokun · Kay: Sağ tarafa basılı tut',
     ready: 'Hazır', clearedAll: 'Tamam',
     hgap: 'Boşluğu aşmak için zıpla', hdjump: 'Havadayken bir kez daha zıpla', hdome: 'Kubbeden kaymak için kay',
     hrope: 'Çamaşır ipine tutun, sonra zıpla', hplank: 'Kayan tahtada dengede dur', htile: 'Çini çatlıyor: hemen geç',
@@ -1114,6 +1153,8 @@ const TX = {
     footer: 'Claude Game Arena · built by {m}', footerBy: 'Claude Game Arena',
     totalStars: 'Total', pausedNote: 'Game paused',
     hudPause: 'Pause', hudSound: 'Sound', touchJump: 'Jump', touchSlide: 'Slide', moveLabel: 'Move', musicOn: 'Music on', musicOff: 'Music off',
+    autoRun: 'Auto-Run', on: 'On', off: 'Off', thSteer: 'Steer', thJump: 'Jump (Hold to slide)', thSlide: 'Sliding',
+    keysTouchAuto: 'Auto-Run · Steer: drag thumb left/right · Jump: tap right side · Slide: hold right side',
     ready: 'Ready', clearedAll: 'Done',
     hgap: 'Jump the gap', hdjump: 'Jump once more in the air', hdome: 'Slide down the dome',
     hrope: 'Grab the laundry line, then jump', hplank: 'Stay balanced on the sliding plank', htile: 'Cracking tile: keep moving',
@@ -1525,7 +1566,7 @@ function stepPlayer(dt, inp) {
   const wasGround = wasG && !jumped;
   const h = groundAt(P.x, P.z);
   if (P.vy <= 0 && h > -Infinity && P.y <= h + (wasGround ? SNAP : 0)) {
-    if (!wasGround && P.vy < -6) { AUDIO.land(); FX.dust(P.x, h, P.z, 8, 1.2); }
+    if (!wasGround && P.vy < -6) { AUDIO.land(); FX.dust(P.x, h, P.z, 8, 1.2); if (P.vy < -9) shake(0.18); }
     P.y = h; P.vy = 0; P.grounded = true; P.gS = gS; P.airJump = 1;
     P.lastGroundedTime = now; P.coyote = COYOTE;
 
@@ -1598,7 +1639,7 @@ function updateBreakables(dt) {
   for (const s of W.surf) {
     if (!s.brk) continue;
     if (s.st === 0) {
-      if (P.grounded && P.gS === s) { s.t0 += dt; if (s.t0 > 0.9) { s.st = 1; s.t1 = 0; s.mesh.material = M.crack; toast(tx('crack'), 'bad'); AUDIO.crack(); } }
+      if (P.grounded && P.gS === s) { s.t0 += dt; if (s.t0 > 0.9) { s.st = 1; s.t1 = 0; s.mesh.material = M.crack; toast(tx('crack'), 'bad'); AUDIO.crack(); shake(0.16); } }
       else s.t0 = Math.max(0, s.t0 - dt * 0.5);
     } else if (s.st === 1) {
       s.t1 += dt;
@@ -1656,7 +1697,7 @@ function kill() {
   L.falls++;
   L.fallT = 6;   // a fall stretches the cat's lead to 13 for a while
   L.combo = 0; L.slowT = 0;   // a fall breaks the stall chain
-  AUDIO.fall(); toast(tx('fell'), 'bad');
+  AUDIO.fall(); toast(tx('fell'), 'bad'); shake(0.4);
   FX.splash(P.x, P.z);
 }
 
@@ -1685,6 +1726,7 @@ function toppleStall(st) {
   L.bestCombo = Math.max(L.bestCombo, L.combo);
   L.slowT = Math.max(L.slowT, 1.2 + 0.6 * Math.min(L.combo, 4) + (kick ? 0.6 : 0));
   AUDIO.topple(L.combo); FX.spill(st.x, st.y, st.z, kick);
+  shake(0.25);
   toast(L.combo >= 2 ? tx('stallCombo', { n: L.combo }) : tx('stallHit'), 'good');
 }
 
@@ -1785,6 +1827,9 @@ function readInput() {
   if (KEYS.has('KeyS') || KEYS.has('ArrowDown')) iz--;
   ix = Math.max(-1, Math.min(1, ix + INPUT.touchX));
   iz = Math.max(-1, Math.min(1, iz + INPUT.touchY));
+  if (S.autoRun && mode === 'play') {
+    if (!KEYS.has('KeyS') && !KEYS.has('ArrowDown') && iz <= 0) iz = 1;
+  }
   const cy = camYaw;
   const fx = -Math.sin(cy), fz = -Math.cos(cy), rx = Math.cos(cy), rz = -Math.sin(cy);
   let mx = rx * ix + fx * iz, mz = rz * ix + fz * iz;
@@ -2630,7 +2675,19 @@ function updateParticles(dt) {
 
 /* ---------- camera ---------- */
 const CAM_D = 8, CAM_H = 5;
-const calm = () => !!(window.Arena && Arena.settings && Arena.settings.reducedMotion);   // kit "reduce motion": read live, visuals only (the sim never sees it)
+const prefersReducedMotion = () => {
+  try {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  } catch (e) {
+    return false;
+  }
+};
+const calm = () => !!((window.Arena && Arena.settings && Arena.settings.reducedMotion) || prefersReducedMotion());
+let camShake = 0;
+function shake(amount) {
+  if (calm()) return;
+  camShake = Math.max(camShake, amount);
+}
 function updateCamera(dt) {
   if (mode === 'title' || mode === 'map') {
     const t = performance.now() / 1000;
@@ -2654,6 +2711,16 @@ function updateCamera(dt) {
   camPos.lerp(camTgt, 1 - Math.exp(-9 * dt));
   // look well ahead and only slightly down, so the cat ahead and the minarets stay upright on screen
   camLook.set(P.x - Math.sin(yaw) * 6, P.y + 0.6, P.z - Math.cos(yaw) * 6);
+  // screen shake: disabled if reduced-motion is requested
+  if (camShake > 0) {
+    if (!calm()) {
+      const s = camShake * 0.35;
+      camPos.x += (Math.random() - 0.5) * s;
+      camPos.y += (Math.random() - 0.5) * s;
+      camLook.x += (Math.random() - 0.5) * s * 0.5;
+    }
+    camShake = Math.max(0, camShake - dt * 4.5);
+  }
   // speed FOV: the view widens as the runner speeds up (a fast dome slide reaches the top of the range)
   const boost = mode === 'play' && !calm() ? Math.min(1, Math.max(0, (sp - 6) / 5)) : 0;   // reduce motion: no speed FOV
   const fovWant = camBaseFov + 9 * boost;
@@ -3009,6 +3076,10 @@ function applyHudLabels() {
   el('tJump').textContent = tx('touchJump'); el('tJump').setAttribute('aria-label', tx('touchJump'));
   el('tSlide').textContent = tx('touchSlide'); el('tSlide').setAttribute('aria-label', tx('touchSlide'));
   el('stick').setAttribute('aria-label', tx('moveLabel'));
+  const rLbl = el('tRightLabel');
+  if (rLbl) rLbl.textContent = tx('thJump');
+  const steerLbl = document.querySelector('#touchLeft .touch-hint-txt');
+  if (steerLbl) steerLbl.textContent = tx('thSteer');
   el('sMaster').setAttribute('aria-label', tx('master')); el('sMusic').setAttribute('aria-label', tx('music')); el('sSfx').setAttribute('aria-label', tx('sfx'));
 }
 
@@ -3267,6 +3338,7 @@ function startLevel(i, keepDaily) {
   hudCache = {};
   applyHudLabels();
   updateHud();
+  applyAutoRun();
 }
 
 function startEndless() {
@@ -3362,6 +3434,7 @@ function startEndless() {
   hudCache = {};
   applyHudLabels();
   updateHud();
+  applyAutoRun();
 }
 
 function openTitle() {
@@ -3506,6 +3579,28 @@ function syncSettings() {
   el('sEN').setAttribute('aria-pressed', String(S.lang === 'en'));
   el('sLow').setAttribute('aria-pressed', String(S.quality === 'low'));
   el('sHigh').setAttribute('aria-pressed', String(S.quality === 'high'));
+  if (el('sAutoOff')) el('sAutoOff').setAttribute('aria-pressed', String(!S.autoRun));
+  if (el('sAutoOn')) el('sAutoOn').setAttribute('aria-pressed', String(!!S.autoRun));
+}
+function applyAutoRun() {
+  const touchEl = el('touch');
+  const stick = el('stick');
+  const tJump = el('tJump');
+  const tSlide = el('tSlide');
+  const autoZone = el('touchAutoZone');
+  if (S.autoRun) {
+    if (touchEl) touchEl.classList.add('autorun');
+    if (stick) stick.hidden = true;
+    if (tJump) tJump.hidden = true;
+    if (tSlide) tSlide.hidden = true;
+    if (autoZone) autoZone.hidden = false;
+  } else {
+    if (touchEl) touchEl.classList.remove('autorun');
+    if (stick) stick.hidden = false;
+    if (tJump) tJump.hidden = false;
+    if (tSlide) tSlide.hidden = false;
+    if (autoZone) autoZone.hidden = true;
+  }
 }
 function applyQuality() {
   const high = S.quality === 'high';
@@ -3527,7 +3622,7 @@ function applyLanguage() {
   document.documentElement.lang = S.lang;
   if (window.Arena) Arena.lang(S.lang);
   const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;   // same test that shows #touch; there the key list names the on-screen controls
-  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = tx(touch && n.dataset.t === 'keys' ? 'keysTouch' : n.dataset.t); });
+  document.querySelectorAll('[data-t]').forEach(n => { n.textContent = tx(touch && n.dataset.t === 'keys' ? (S.autoRun ? 'keysTouchAuto' : 'keysTouch') : n.dataset.t); });
   el('tTitle') && (el('tTitle').textContent = tx('name'));
   el('foot').innerHTML = tx('footer', { m: MODEL }).replace('Claude Game Arena', '<a href="https://github.com/Furkiozknn" target="_blank" rel="noopener">Claude Game Arena</a>');
   document.title = tx('name');
@@ -3573,6 +3668,8 @@ el('sTR').addEventListener('click', () => setLang('tr'));
 el('sEN').addEventListener('click', () => setLang('en'));
 el('sLow').addEventListener('click', () => { S.quality = 'low'; applyQuality(); syncSettings(); persistSettings(); });
 el('sHigh').addEventListener('click', () => { S.quality = 'high'; applyQuality(); syncSettings(); persistSettings(); });
+if (el('sAutoOff')) el('sAutoOff').addEventListener('click', () => { S.autoRun = false; applyAutoRun(); syncSettings(); persistSettings(); applyLanguage(); });
+if (el('sAutoOn')) el('sAutoOn').addEventListener('click', () => { S.autoRun = true; applyAutoRun(); syncSettings(); persistSettings(); applyLanguage(); });
 el('sFull').addEventListener('click', toggleFullscreen);
 el('bDaily').addEventListener('click', () => { AUDIO.click(); startDaily(); });
 el('sA11y').addEventListener('click', () => { if (window.Arena) Arena.openSettings(); });
@@ -3639,6 +3736,107 @@ addEventListener('pointerup', () => { drag = null; });
   stick.addEventListener('pointerup', end); stick.addEventListener('pointercancel', end);
   el('tJump').addEventListener('pointerdown', e => { e.preventDefault(); if (mode === 'play') INPUT.jumpQ = true; });
   el('tSlide').addEventListener('pointerdown', e => { e.preventDefault(); if (mode === 'play') INPUT.slideQ = true; });
+
+  // One-hand auto-run touch zones
+  const zoneLeft = el('touchLeft');
+  const zoneRight = el('touchRight');
+  const rightIcon = el('tActionIcon');
+  const rightLbl = el('tRightLabel');
+
+  let leftId = null, leftStartX = 0;
+  if (zoneLeft) {
+    zoneLeft.addEventListener('pointerdown', e => {
+      if (!S.autoRun || mode !== 'play') return;
+      e.preventDefault();
+      leftId = e.pointerId;
+      try { zoneLeft.setPointerCapture(e.pointerId); } catch (err) {}
+      leftStartX = e.clientX;
+      zoneLeft.classList.add('active');
+      const r = zoneLeft.getBoundingClientRect();
+      const mid = r.left + r.width / 2;
+      const rel = (e.clientX - mid) / (r.width * 0.4);
+      INPUT.touchX = Math.max(-1, Math.min(1, rel));
+    });
+    zoneLeft.addEventListener('pointermove', e => {
+      if (!S.autoRun || e.pointerId !== leftId) return;
+      const dx = e.clientX - leftStartX;
+      INPUT.touchX = Math.max(-1, Math.min(1, dx / 40));
+    });
+    const leftEnd = e => {
+      if (e.pointerId !== leftId) return;
+      leftId = null;
+      if (rightId === null) INPUT.touchX = 0;
+      zoneLeft.classList.remove('active');
+    };
+    zoneLeft.addEventListener('pointerup', leftEnd);
+    zoneLeft.addEventListener('pointercancel', leftEnd);
+  }
+
+  let rightId = null, rightStartT = 0, rightStartX = 0, rightStartY = 0, rightHoldTimer = null, rightIsHold = false;
+  if (zoneRight) {
+    zoneRight.addEventListener('pointerdown', e => {
+      if (!S.autoRun || mode !== 'play') return;
+      e.preventDefault();
+      rightId = e.pointerId;
+      try { zoneRight.setPointerCapture(e.pointerId); } catch (err) {}
+      rightStartT = performance.now();
+      rightStartX = e.clientX;
+      rightStartY = e.clientY;
+      rightIsHold = false;
+      zoneRight.classList.remove('active-slide');
+      zoneRight.classList.add('active-jump');
+      if (rightIcon) rightIcon.textContent = '▲';
+      if (rightLbl) rightLbl.textContent = tx('thJump');
+      if (rightHoldTimer) clearTimeout(rightHoldTimer);
+      rightHoldTimer = setTimeout(() => {
+        if (rightId !== null && mode === 'play' && S.autoRun) {
+          rightIsHold = true;
+          INPUT.slideQ = true;
+          P.slideT = 0.7;
+          zoneRight.classList.remove('active-jump');
+          zoneRight.classList.add('active-slide');
+          if (rightIcon) rightIcon.textContent = '▼';
+          if (rightLbl) rightLbl.textContent = tx('thSlide');
+        }
+      }, 180);
+    });
+    zoneRight.addEventListener('pointermove', e => {
+      if (!S.autoRun || e.pointerId !== rightId) return;
+      const dx = e.clientX - rightStartX;
+      const dy = e.clientY - rightStartY;
+      if (Math.abs(dx) > 10) {
+        INPUT.touchX = Math.max(-1, Math.min(1, dx / 40));
+      }
+      if (dy > 28 && !rightIsHold) {
+        rightIsHold = true;
+        if (rightHoldTimer) { clearTimeout(rightHoldTimer); rightHoldTimer = null; }
+        if (mode === 'play') { INPUT.slideQ = true; P.slideT = 0.7; }
+        zoneRight.classList.remove('active-jump');
+        zoneRight.classList.add('active-slide');
+        if (rightIcon) rightIcon.textContent = '▼';
+        if (rightLbl) rightLbl.textContent = tx('thSlide');
+      }
+      if (rightIsHold && mode === 'play') {
+        P.slideT = Math.max(P.slideT, 0.4);
+      }
+    });
+    const rightEnd = e => {
+      if (e.pointerId !== rightId) return;
+      if (rightHoldTimer) { clearTimeout(rightHoldTimer); rightHoldTimer = null; }
+      const dur = performance.now() - rightStartT;
+      if (!rightIsHold && dur < 250 && mode === 'play' && S.autoRun) {
+        INPUT.jumpQ = true;
+      }
+      rightId = null;
+      rightIsHold = false;
+      if (leftId === null) INPUT.touchX = 0;
+      zoneRight.classList.remove('active-jump', 'active-slide');
+      if (rightIcon) rightIcon.textContent = '▲';
+      if (rightLbl) rightLbl.textContent = tx('thJump');
+    };
+    zoneRight.addEventListener('pointerup', rightEnd);
+    zoneRight.addEventListener('pointercancel', rightEnd);
+  }
 })();
 
 let camBaseFov = 60;
@@ -3655,7 +3853,21 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 // arena-kit: same pause when the tab is hidden (the game's own listener stays); 'resume' leaves the pause menu up.
 // Reduce motion: calm() reads Arena.settings.reducedMotion live; switched on mid-run, the speed FOV drops back at once.
 if (window.Arena) Arena.on('pause', pauseGame);
-if (window.Arena) Arena.on('settings', () => { if (calm() && camera.fov !== camBaseFov) { camera.fov = camBaseFov; camera.updateProjectionMatrix(); } });
+if (window.Arena) Arena.on('settings', () => { if (calm()) { camShake = 0; if (camera.fov !== camBaseFov) { camera.fov = camBaseFov; camera.updateProjectionMatrix(); } } });
+try {
+  const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const onMotionChange = () => {
+    if (calm()) {
+      camShake = 0;
+      if (Math.abs(camera.fov - camBaseFov) > 0.01) {
+        camera.fov = camBaseFov;
+        camera.updateProjectionMatrix();
+      }
+    }
+  };
+  if (mql.addEventListener) mql.addEventListener('change', onMotionChange);
+  else if (mql.addListener) mql.addListener(onMotionChange);
+} catch (e) {}
 
 /* ---------- main loop ---------- */
 let acc = 0, last = performance.now(), fpsN = 0, fpsT = 0, fps = 0;
@@ -3756,10 +3968,14 @@ window.carsi = {
     mode = 'play';
     show(null);
     el('hud').hidden = false;
+    applyAutoRun();
     return SURF.length;
   },
   get fps() { return fps; },
-  get draws() { return renderer.info.render.calls; }
+  get draws() { return renderer.info.render.calls; },
+  get autoRun() { return !!S.autoRun; },
+  setAutoRun: v => { S.autoRun = !!v; applyAutoRun(); syncSettings(); persistSettings(); applyLanguage(); },
+  get reducedMotion() { return calm(); }
 };
 window.carsiSim = carsiSim;
 
@@ -3768,6 +3984,7 @@ resize();
 applyQuality();
 document.querySelectorAll('.mascot').forEach(img => { if (FLAG.noassets) img.removeAttribute('src'); else img.onerror = () => { img.hidden = true; }; });
 applyLanguage();
+applyAutoRun();
 soundIcon();
 openTitle();
 el('bPlay').disabled = false;
