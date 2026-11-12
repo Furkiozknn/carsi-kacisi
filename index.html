@@ -1828,7 +1828,8 @@ function readInput() {
   ix = Math.max(-1, Math.min(1, ix + INPUT.touchX));
   iz = Math.max(-1, Math.min(1, iz + INPUT.touchY));
   if (S.autoRun && mode === 'play') {
-    if (!KEYS.has('KeyS') && !KEYS.has('ArrowDown') && iz <= 0) iz = 1;
+    // only force forward if touch stick is not pulled backward
+    if (INPUT.touchY >= -0.1 && !KEYS.has('KeyS') && !KEYS.has('ArrowDown') && iz <= 0) iz = 1;
   }
   const cy = camYaw;
   const fx = -Math.sin(cy), fz = -Math.cos(cy), rx = Math.cos(cy), rz = -Math.sin(cy);
