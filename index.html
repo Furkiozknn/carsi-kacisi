@@ -332,6 +332,19 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   #tJump{width:60px;height:60px;bottom:calc(12px + var(--sa-b))}
   #tSlide{width:50px;height:50px;bottom:calc(78px + var(--sa-b))}
 }
+/* Yazı denetimi (2026-11): 'Claude Game Arena · …' alt bilgisi başlık/harita kartının arkasında kalıyordu;
+   artık açık kartın son satırı olarak akar (footInCard) */
+.card .foot{position:static;transform:none;display:inline-block;margin:12px auto 0;white-space:normal;max-width:100%}
+/* Yazı denetimi (2026-11): yatay telefonda başlık kartı ekrana sığsın — logo ve uzun açıklama gizlenir,
+   düğmeler iki sütun olur, OYNA tam genişlikte kalır */
+@media (max-height:440px){
+  #scTitle .logo,#scTitle .how{display:none}
+  #scTitle .card{padding:10px 16px}
+  #scTitle .keys{margin:4px 0 8px}
+  #scTitle .col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #scTitle .col>.btn{min-height:40px;margin:0}
+  #scTitle #bPlay{grid-column:1/-1}
+}
 @media (prefers-reduced-motion: reduce){
   #touch,.toast,.hint,.notebook,.btn,.card,.stars-big svg.on,.combo,.touch-hint-pod,.touch-zone-left,.touch-zone-right{animation:none!important;transition:none!important}
 }
@@ -1303,6 +1316,15 @@ window.ArenaCore = { version: VERSION, kalite, render, kabuk, his, kamera, test 
 </section>
 
 <footer class="foot" id="foot"></footer>
+<script>
+// Alt bilgiyi açık ekranın kartının sonuna taşır (sabit konumda kartın arkasında kalıyordu).
+function footInCard() {
+  const f = document.getElementById('foot'); if (!f) return;
+  const sc = [...document.querySelectorAll('section.screen')].find((s) => !s.hidden && s.querySelector('.card'));
+  const card = sc && sc.querySelector('.card');
+  if (card && f.parentElement !== card) card.appendChild(f);
+}
+</script>
 <pre id="dbg" hidden></pre>
 
 <script>
@@ -3454,7 +3476,7 @@ const AUDIO = (() => {
 
 /* ---------- screens ---------- */
 const SCREENS = ['scTitle', 'scMap', 'scPause', 'scResult', 'scEnding'];
-function show(id) { for (const s of SCREENS) el(s).hidden = s !== id; }
+function show(id) { for (const s of SCREENS) el(s).hidden = s !== id; footInCard(); }
 function focusFirst(id) { const b = el(id).querySelector('button'); if (b) b.focus({ preventScroll: true }); }
 
 function unlocked(i) { return i === 0 || DONE[i - 1]; }
@@ -3727,7 +3749,7 @@ function openTitle() {
   mode = 'title';
   LI = 0;
   buildLevel(LEVELS[0]);
-  el('hud').hidden = true; el('touch').hidden = true; el('foot').hidden = false;
+  el('hud').hidden = true; el('touch').hidden = true; el('foot').hidden = false; footInCard();
   el('notebook').hidden = true;
   renderTitleBest();
   show('scTitle');
@@ -3743,7 +3765,7 @@ function openMap() {
   for (const r of backdropRoofs) r.position.z = -250;
   if (el('hDistWrap')) el('hDistWrap').hidden = true;
   mode = 'map';
-  el('hud').hidden = true; el('touch').hidden = true; el('foot').hidden = false;
+  el('hud').hidden = true; el('touch').hidden = true; el('foot').hidden = false; footInCard();
   renderMap();
   show('scMap');
   focusFirst('scMap');
@@ -3903,6 +3925,7 @@ function applyLanguage() {
   const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;   // same test that shows #touch; there the key list names the on-screen controls
   document.querySelectorAll('[data-t]').forEach(n => { n.textContent = tx(touch && n.dataset.t === 'keys' ? (S.autoRun ? 'keysTouchAuto' : 'keysTouch') : n.dataset.t); });
   el('tTitle') && (el('tTitle').textContent = tx('name'));
+  footInCard();
   el('foot').innerHTML = tx('footer', { m: MODEL }).replace('Claude Game Arena', '<a href="https://github.com/Furkiozknn" target="_blank" rel="noopener">Claude Game Arena</a>');
   document.title = tx('name');
   applyHudLabels();
