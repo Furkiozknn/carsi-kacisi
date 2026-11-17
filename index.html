@@ -4358,8 +4358,16 @@ el('bRestart').addEventListener('click', () => { if (L && L.endless) startEndles
 el('bPSettings').addEventListener('click', openSettings);
 el('bPMenu').addEventListener('click', openTitle);
 el('bSetClose').addEventListener('click', closeSettings);
-el('rNext').addEventListener('click', () => { AUDIO.click(); nextLevel(); });
-el('rRetry').addEventListener('click', () => { AUDIO.click(); if (L && L.endless) startEndless(); else startLevel(LI, true); });
+// Portals (arena-kit v1.3 Arena.portal): an interstitial may play between levels and before a retry, on the result
+// screen where the game already waits. Without a portal the action runs synchronously, exactly as before.
+let breakBusy = false;
+function afterBreak(f) {
+  if (!(window.Arena && Arena.portal && Arena.portal.name !== 'none')) return f(); // own site: synchronous, as before
+  if (breakBusy) return; breakBusy = true;
+  Arena.portal.midgame().catch(() => false).then(() => { breakBusy = false; f(); });
+}
+el('rNext').addEventListener('click', () => { AUDIO.click(); afterBreak(nextLevel); });
+el('rRetry').addEventListener('click', () => { AUDIO.click(); afterBreak(() => { if (L && L.endless) startEndless(); else startLevel(LI, true); }); });
 el('rMap').addEventListener('click', () => { if (L && L.endless) openTitle(); else openMap(); });
 el('eMenu').addEventListener('click', openTitle);
 el('eAgain').addEventListener('click', () => startLevel(0));
