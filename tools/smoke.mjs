@@ -11,6 +11,7 @@
 // Usage: node tools/smoke.mjs [chromium|firefox|webkit ...]   (default: chromium)
 // Needs the `playwright` package and its browsers. SMOKE_CDN_DIR=<dir> serves the CDN files from
 // a local copy of the npm package instead of the network (for machines without CDN access).
+// PW_EXECUTABLE=<path> runs chromium with that browser binary instead of Playwright's own download.
 import { createServer } from 'node:http';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -190,6 +191,7 @@ for (const name of browsers) {
   // Headless Firefox on a machine without a GPU refuses WebGL unless it is forced on.
   // SMOKE_HEADED=1 runs a real window (under xvfb in CI), where Firefox gets a GL context from Mesa.
   const opts = { headless: process.env.SMOKE_HEADED !== '1' };
+  if (name === 'chromium' && process.env.PW_EXECUTABLE) opts.executablePath = process.env.PW_EXECUTABLE; // e.g. a locally installed Edge
   if (name === 'firefox') opts.firefoxUserPrefs = { 'webgl.force-enabled': true };
   const browser = await pw[name].launch(opts);
   const version = browser.version();

@@ -17,7 +17,8 @@
 //   --candidate <file>  candidate HTML (default: the working-tree entry file); assets always come from the working tree
 //   --only sim|layout   run one part
 //   --strict-layout     KNOWN layout offenders fail too
-// Env: SMOKE_CDN_DIR=<dir> serves CDN files from a local npm package copy; GATE_JSON=<file> writes a JSON report.
+// Env: SMOKE_CDN_DIR=<dir> serves CDN files from a local npm package copy; GATE_JSON=<file> writes a JSON report;
+//      PW_EXECUTABLE=<path> uses that Chromium-based browser instead of Playwright's own download.
 // Output: "ok"/"FAIL"/"KNOWN"/"note" lines, then RESULT OK|FAIL. Exit 1 on FAIL.
 //
 // Porting to another game: change only the GAME block below (see tools/GATE.md). Everything after it is generic.
@@ -171,7 +172,7 @@ const frames = (page, n, ms = 20000) => page.evaluate(([n, ms]) => new Promise((
   const f = () => (++i >= n || performance.now() > end ? done(i) : requestAnimationFrame(f)); requestAnimationFrame(f);
 }), [n, ms]);
 
-const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({ headless: true, ...(process.env.PW_EXECUTABLE ? { executablePath: process.env.PW_EXECUTABLE } : {}), args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 log(`gate ${GAME.name}: chromium ${browser.version()}, candidate ${candFile === join(root, GAME.entry) ? GAME.entry + ' (working tree)' : candFile} sha ${sha(builds.cand)}`);
 
 function consoleCheck(what, errors) {
