@@ -5,15 +5,23 @@
 <meta name="arena-game" content="carsi-kacisi">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Çarşı Kaçışı</title>
-<meta name="description" content="A 3D rooftop runner over the domes of an Istanbul covered bazaar: chase a white Van cat, beat the gate splits, collect lokum. Plays in the browser.">
+<meta name="description" content="İstanbul Kapalıçarşı'nın kubbeleri üzerinde 3D çatı koşusu: beyaz Van kedisini kovala, kapı ara zamanlarını geç, lokum topla. Tarayıcıda oynanır. / A 3D rooftop runner over the domes of an Istanbul covered bazaar. Plays in the browser.">
+<meta name="theme-color" content="#3B2E2A">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%231A120B'/%3E%3Cpath d='M4 28 Q4 13 18 13 Q32 13 32 28 Z' fill='%23E88933'/%3E%3Cline x1='18' y1='6' x2='18' y2='13' stroke='%23F4B236' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='5' r='2' fill='%23F4B236'/%3E%3Ccircle cx='25' cy='13' r='4.5' fill='none' stroke='%232DD4BF' stroke-width='2'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:site_name" content="Claude Game Arena">
 <meta property="og:title" content="Çarşı Kaçışı">
-<meta property="og:description" content="A 3D rooftop runner over the domes of an Istanbul covered bazaar: chase a white Van cat, beat the gate splits, collect lokum. Plays in the browser.">
+<meta property="og:description" content="İstanbul Kapalıçarşı'nın kubbeleri üzerinde 3D çatı koşusu: beyaz Van kedisini kovala, kapı ara zamanlarını geç, lokum topla. Tarayıcıda oynanır.">
+<meta property="og:image:alt" content="Çarşı Kaçışı: Kapalıçarşı çatılarında 3D koşu oyunu">
 <meta property="og:url" content="https://furkiozknn.github.io/carsi-kacisi/">
 <meta property="og:image" content="https://furkiozknn.github.io/carsi-kacisi/docs/card.jpg">
 <meta property="og:image:width" content="960">
 <meta property="og:image:height" content="540">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Çarşı Kaçışı">
+<meta name="twitter:description" content="Kapalıçarşı çatılarında kediyi kovala, lokum topla. Tarayıcıda ücretsiz oyna.">
+<meta name="twitter:image" content="https://furkiozknn.github.io/carsi-kacisi/docs/card.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Russo+One&display=swap" rel="stylesheet">
@@ -345,6 +353,20 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   #scTitle .col>.btn{min-height:40px;margin:0}
   #scTitle #bPlay{grid-column:1/-1}
 }
+/* v2.1: başlıktaki küçük düğme sırası, sürüm etiketi, Yenilikler ve Başarımlar pencereleri */
+.row.mini{margin-top:12px;gap:8px}
+.row.mini .btn{min-height:44px;font-size:12.5px;padding:0 10px}
+.ver{display:inline-block;margin:10px auto 0;min-height:44px;padding:0 14px;border:0;background:none;color:var(--ink-muted);
+  font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.ver:hover{color:var(--spice)}
+.ulist{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:6px;text-align:left}
+.ulist li{padding:8px 12px;background:var(--paper-card);border:2px solid var(--line);border-radius:12px;font-size:13.5px;line-height:1.45;
+  font-weight:600;color:var(--ink2)}
+.ulist li b{color:var(--ink);font-weight:800}
+.ulist li.lock{opacity:.62}
+.ulist li .tick{display:inline-block;min-width:1.4em;color:var(--teal);font-weight:900}
+.ulist li small{display:block;color:var(--ink-muted);font-weight:700;font-size:12px}
+.card.tall{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto}
 @media (prefers-reduced-motion: reduce){
   #touch,.toast,.hint,.notebook,.btn,.card,.stars-big svg.on,.combo,.touch-hint-pod,.touch-zone-left,.touch-zone-right{animation:none!important;transition:none!important}
 }
@@ -1620,9 +1642,15 @@ window.ArenaCore = { version: VERSION, kalite, render, kabuk, his, kamera, test,
       <button class="btn" id="bDaily" data-t="daily"></button>
       <button class="btn" id="bTSettings" data-t="settings"></button>
     </div>
+    <div class="row mini">
+      <button class="btn sm" id="bAch" data-t="ach"></button>
+      <button class="btn sm" id="bNews" data-t="news"></button>
+      <a class="btn sm" id="bHub" href="https://furkiozknn.github.io/" target="_blank" rel="noopener" data-t="otherGames"></a>
+    </div>
     <p class="best" id="tBest">Yükleniyor… / Loading…</p>
     <p class="best" id="tEndless" hidden></p>
     <p class="best" id="tDaily"></p>
+    <button class="ver" id="bVer" type="button"></button>
     <p class="best" id="loadFail" hidden>3D motor yüklenemedi, internet bağlantınızı kontrol edin. / The 3D engine could not load; check your internet connection.</p>
   </div>
 </section>
@@ -1673,6 +1701,30 @@ window.ArenaCore = { version: VERSION, kalite, render, kabuk, his, kamera, test,
     <div class="set-row"><span data-t="fullscreen"></span><div class="seg"><button class="btn sm" id="sFull" data-t="toggle"></button></div></div>
     <div class="set-row"><span data-t="a11y"></span><div class="seg"><button class="btn sm" id="sA11y" data-t="a11yOpen"></button></div></div>
     <div class="col" style="margin-top:16px"><button class="btn pri" id="bSetClose" data-t="close"></button></div>
+  </div>
+</section>
+
+<!-- v2.1: Yenilikler -->
+<section class="screen" id="scNews" aria-labelledby="newsTitle" hidden style="z-index:40">
+  <div class="card tall">
+    <div class="card-flourish tl"></div><div class="card-flourish tr"></div>
+    <div class="card-flourish bl"></div><div class="card-flourish br"></div>
+    <h2 id="newsTitle" data-t="news"></h2>
+    <p class="sub" id="newsVer"></p>
+    <ul class="ulist" id="newsList"></ul>
+    <div class="col" style="margin-top:12px"><button class="btn pri" id="bNewsClose" data-t="close"></button></div>
+  </div>
+</section>
+
+<!-- v2.1: Başarımlar -->
+<section class="screen" id="scAch" aria-labelledby="achTitle" hidden style="z-index:40">
+  <div class="card tall">
+    <div class="card-flourish tl"></div><div class="card-flourish tr"></div>
+    <div class="card-flourish bl"></div><div class="card-flourish br"></div>
+    <h2 id="achTitle" data-t="ach"></h2>
+    <p class="sub" id="achCount"></p>
+    <ul class="ulist" id="achList"></ul>
+    <div class="col" style="margin-top:12px"><button class="btn pri" id="bAchClose" data-t="close"></button></div>
   </div>
 </section>
 
@@ -1796,6 +1848,31 @@ const persistGhosts = () => {
 const getEndlessBest = () => { const d = lsGet(KEY.endless, { best: 0 }); return (d && typeof d.best === 'number') ? d.best : 0; };
 const saveEndlessBest = dist => lsSet(KEY.endless, { best: dist });
 
+/* ---------- v2.1: version, achievements (own key; old saves load unchanged) ---------- */
+const VERSION = '2.1';
+const ACH_IDS = ['first', 'three', 'sign', 'signs', 'chain', 'stalls', 'all', 'daily', 'endless'];
+const ACH = lsGet('arena.carsi.ach', { got: {}, stalls: 0 });
+if (!ACH.got || typeof ACH.got !== 'object') ACH.got = {};
+if (typeof ACH.stalls !== 'number') ACH.stalls = 0;
+const persistAch = () => { if (!FLAG.auto) lsSet('arena.carsi.ach', ACH); };
+// players who already progressed get the matching achievements silently, once
+(() => {
+  const had = Object.assign({}, ACH.got);
+  if (DONE.some(Boolean)) ACH.got.first = 1;
+  if (BESTLV.some(b => b && b.stars >= 3)) ACH.got.three = 1;
+  if (SIGNS.some(Boolean)) ACH.got.sign = 1;
+  if (SIGNS.every(Boolean)) ACH.got.signs = 1;
+  if (DONE.every(Boolean)) ACH.got.all = 1;
+  if (getEndlessBest() >= 300) ACH.got.endless = 1;
+  if (Object.keys(ACH.got).length !== Object.keys(had).length) persistAch();
+})();
+function achUnlock(id) {
+  if (ACH.got[id] || !ACH_IDS.includes(id)) return;
+  ACH.got[id] = 1; persistAch();
+  if (!FLAG.auto) toast(tx('achNew', { a: tx('a_' + id) }), 'good');
+  if (window.Arena && Arena.award) Arena.award('carsi-kacisi:' + id, tx('a_' + id));
+}
+
 /* ---------- text ---------- */
 const TX = {
   tr: {
@@ -1830,6 +1907,21 @@ const TX = {
     hstall: 'Tezgâha çarp: dökülen mallar kediyi yavaşlatır',
     daily: 'Günün Meydan Okuması', dailyLine: 'Günlük seri: {s} gün · en iyi: {b}', dailyDone: 'Bugünkü çatı tamam', dailyLevel: 'Bugünün çatısı: {n}',
     a11y: 'Erişilebilirlik', a11yOpen: 'Aç', share: 'Paylaş', another: 'Başka oyun',
+    ach: 'Başarımlar', news: 'Yenilikler', otherGames: 'Diğer oyunlar', achCount: '{n} / {t} başarım açıldı', achNew: 'Başarım: {a}',
+    verTag: 'v{v} · Kasım 2026', newsSub: 'Sürüm {v} · Kasım 2026',
+    a_first: 'İlk yakalama', a_first_d: 'Bir bölümde kediyi yakala.',
+    a_three: 'Üç yıldız', a_three_d: 'Bir bölümü üç yıldızla bitir.',
+    a_sign: 'Defter başlangıcı', a_sign_d: 'İlk lonca işaretini bul.',
+    a_signs: 'Lonca ustası', a_signs_d: '10 lonca işaretinin hepsini bul.',
+    a_chain: 'Zincirleme', a_chain_d: 'Tek turda 3 tezgâhı peş peşe devir.',
+    a_stalls: 'Tezgâh avcısı', a_stalls_d: 'Toplam 25 tezgâh devir.',
+    a_all: 'Bütün çatılar', a_all_d: '10 bölümün hepsini bitir.',
+    a_daily: 'Günün çatısı', a_daily_d: 'Günün meydan okumasını tamamla.',
+    a_endless: 'Uzun koşu', a_endless_d: 'Çarşı Turu\'nda 300 m koş.',
+    n1: 'Başarımlar: 9 hedef; ilerlemen tarayıcında saklanır.',
+    n2: 'Ana menüde sürüm etiketi ve bu Yenilikler penceresi.',
+    n3: 'Ana menüden diğer oyunlara geçiş bağlantısı.',
+    n4: 'Sekme simgesi, tarayıcı rengi, Türkçe sayfa açıklaması ve paylaşım kartı düzeltildi; bulunamayan sayfalar için 404 sayfası eklendi.',
     awFirst: 'İlk kedi yakalandı', awAll: '10 çatının hepsi', awStars: '30 yıldızın hepsi', ghost: 'Hayalet',
     endless: 'Çarşı Turu', endlessTitle: 'Çarşı Turu (Sonsuz)', endlessSub: 'Sonsuz çatı koşusu sona erdi.', endlessOver: 'Tur Bitti!', dist: 'Mesafe', endlessBest: 'Çarşı Turu Rekoru', endlessUnlockedToast: 'Çarşı Turu modu açıldı!', endlessGate: '{d} m Geçildi!'
   },
@@ -1865,6 +1957,21 @@ const TX = {
     hstall: 'Run into the stall: spilled goods slow the cat',
     daily: 'Daily challenge', dailyLine: 'Daily streak: {s} · best: {b}', dailyDone: 'Today\'s roof is done', dailyLevel: 'Today\'s roof: {n}',
     a11y: 'Accessibility', a11yOpen: 'Open', share: 'Share', another: 'Another game',
+    ach: 'Achievements', news: 'What\'s new', otherGames: 'More games', achCount: '{n} / {t} achievements unlocked', achNew: 'Achievement: {a}',
+    verTag: 'v{v} · Nov 2026', newsSub: 'Version {v} · November 2026',
+    a_first: 'First catch', a_first_d: 'Catch the cat in a level.',
+    a_three: 'Three stars', a_three_d: 'Finish a level with three stars.',
+    a_sign: 'Notebook begins', a_sign_d: 'Find the first guild sign.',
+    a_signs: 'Guild master', a_signs_d: 'Find all 10 guild signs.',
+    a_chain: 'Chain reaction', a_chain_d: 'Topple 3 stalls in a row in one run.',
+    a_stalls: 'Stall hunter', a_stalls_d: 'Topple 25 stalls in total.',
+    a_all: 'Every roof', a_all_d: 'Finish all 10 levels.',
+    a_daily: 'Roof of the day', a_daily_d: 'Complete the daily challenge.',
+    a_endless: 'Long run', a_endless_d: 'Run 300 m in the Bazaar Tour.',
+    n1: 'Achievements: 9 goals; your progress is stored in your browser.',
+    n2: 'A version tag on the main menu and this What\'s new window.',
+    n3: 'A link to the other games on the main menu.',
+    n4: 'Tab icon, browser colour, page description and share card fixed; a 404 page added for missing pages.',
     awFirst: 'First cat caught', awAll: 'All 10 roofs', awStars: 'All 30 stars', ghost: 'Ghost',
     endless: 'Endless Tour', endlessTitle: 'Bazaar Tour (Endless)', endlessSub: 'The endless rooftop run has ended.', endlessOver: 'Tour Ended!', dist: 'Distance', endlessBest: 'Endless Tour Record', endlessUnlockedToast: 'Endless Tour mode unlocked!', endlessGate: '{d} m Reached!'
   }
@@ -2430,6 +2537,7 @@ function toppleStall(st) {
   L.slowT = Math.max(L.slowT, 1.2 + 0.6 * Math.min(L.combo, 4) + (kick ? 0.6 : 0));
   AUDIO.topple(L.combo); FX.spill(st.x, st.y, st.z, kick);
   shake(0.25);
+  ACH.stalls++; if (L.combo >= 3) achUnlock('chain'); if (ACH.stalls >= 25) achUnlock('stalls');
   toast(L.combo >= 2 ? tx('stallCombo', { n: L.combo }) : tx('stallHit'), 'good');
 }
 
@@ -2456,6 +2564,7 @@ function updateCat(dt) {
 // the first guild sign of a level: the notebook opens with a sourced fact; the sign counts on the roof map
 function collectSign() {
   SIGNS[LI] = true; persistProgress();
+  achUnlock('sign'); if (SIGNS.every(Boolean)) achUnlock('signs');
   AUDIO.check(); FX.spark(W.sign.x, W.sign.y + 1.5, W.sign.z);
   toast(tx('signFound'), 'good');
   showNotebook(LI);
@@ -3969,6 +4078,8 @@ function finishEndless() {
   if (record && !FLAG.auto) {
     saveEndlessBest(dist);
   }
+  if (dist >= 300) achUnlock('endless');
+  persistAch();
   LAST_RESULT = { endless: true, dist, prevBest: Math.max(dist, prevBest), record, time: L.time, lok: L.lokGot };
   showEndlessResult(LAST_RESULT);
   if (window.Arena && Arena.complete) Arena.complete({ mount: el('scResult').querySelector('.col') });
@@ -4221,6 +4332,8 @@ function finishLevel() {
   LAST_RESULT = { stars, r: Object.assign(r, { record }) };
   if (!DAILY || DAILY.wasUnlocked) DONE[LI] = true;
   persistProgress();
+  achUnlock('first'); if (n === 3) achUnlock('three'); if (DONE.every(Boolean)) achUnlock('all'); if (DAILY) achUnlock('daily');
+  persistAch();
   if (DAILY) DAILY.rec = DAILY.d.complete(n * 1000 + r.lok);
   if (window.Arena) {
     Arena.award('carsi-kacisi:first-catch', tx('awFirst'));
@@ -4269,6 +4382,31 @@ function nextLevel() {
   if (LI >= LEVELS.length - 1) { mode = 'ending'; showEnding(); return; }
   startLevel(LI + 1);
 }
+
+/* ---------- v2.1: Yenilikler ve Başarımlar pencereleri ---------- */
+function addLi(ul, html, cls) { const li = document.createElement('li'); if (cls) li.className = cls; li.innerHTML = html; ul.appendChild(li); }
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function renderNews() {
+  el('newsVer').textContent = tx('newsSub', { v: VERSION });
+  const ul = el('newsList'); ul.textContent = '';
+  ['n1', 'n2', 'n3', 'n4'].forEach(k => addLi(ul, esc(tx(k))));
+}
+function renderAch() {
+  const got = ACH_IDS.filter(id => ACH.got[id]).length;
+  el('achCount').textContent = tx('achCount', { n: got, t: ACH_IDS.length });
+  const ul = el('achList'); ul.textContent = '';
+  ACH_IDS.forEach(id => {
+    const ok = !!ACH.got[id];
+    let extra = '';
+    if (id === 'stalls' && !ok) extra = '<small>' + Math.min(ACH.stalls, 25) + ' / 25</small>';
+    if (id === 'signs' && !ok) extra = '<small>' + SIGNS.filter(Boolean).length + ' / 10</small>';
+    if (id === 'all' && !ok) extra = '<small>' + DONE.filter(Boolean).length + ' / 10</small>';
+    addLi(ul, '<span class="tick" aria-hidden="true">' + (ok ? '✓' : '·') + '</span><b>' + esc(tx('a_' + id)) + '</b><br>' + esc(tx('a_' + id + '_d')) + extra, ok ? '' : 'lock');
+  });
+}
+function openOverlay(id, render, btn) { render(); el(id).hidden = false; focusFirst(id); el(id).dataset.from = btn || ''; }
+function closeOverlay(id) { el(id).hidden = true; const f = el(id).dataset.from && el(el(id).dataset.from); if (f && !f.closest('[hidden]')) f.focus({ preventScroll: true }); }
+const overlayOpen = () => ['scNews', 'scAch'].find(id => !el(id).hidden);
 
 /* ---------- settings ---------- */
 function openSettings() {
@@ -4331,6 +4469,9 @@ function applyLanguage() {
   footInCard();
   el('foot').innerHTML = tx('footer', { m: MODEL }).replace('Claude Game Arena', '<a href="https://github.com/Furkiozknn" target="_blank" rel="noopener">Claude Game Arena</a>');
   document.title = tx('name');
+  el('bVer').textContent = tx('verTag', { v: VERSION });
+  if (!el('scNews').hidden) renderNews();
+  if (!el('scAch').hidden) renderAch();
   applyHudLabels();
   syncSettings();
   if (mode === 'title') renderTitleBest();
@@ -4358,6 +4499,12 @@ el('bRestart').addEventListener('click', () => { if (L && L.endless) startEndles
 el('bPSettings').addEventListener('click', openSettings);
 el('bPMenu').addEventListener('click', openTitle);
 el('bSetClose').addEventListener('click', closeSettings);
+el('bAch').addEventListener('click', () => { AUDIO.click(); openOverlay('scAch', renderAch, 'bAch'); });
+el('bNews').addEventListener('click', () => { AUDIO.click(); openOverlay('scNews', renderNews, 'bNews'); });
+el('bVer').addEventListener('click', () => { AUDIO.click(); openOverlay('scNews', renderNews, 'bVer'); });
+el('bAchClose').addEventListener('click', () => closeOverlay('scAch'));
+el('bNewsClose').addEventListener('click', () => closeOverlay('scNews'));
+addEventListener('pagehide', persistAch);
 // Portals (arena-kit v1.3 Arena.portal): an interstitial may play between levels and before a retry, on the result
 // screen where the game already waits. Without a portal the action runs synchronously, exactly as before.
 let breakBusy = false;
@@ -4410,6 +4557,7 @@ addEventListener('keydown', e => {
   if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat && mode === 'play') INPUT.slideQ = true;
   if (e.code === 'KeyP' || e.code === 'Escape') {
     if (!el('scSettings').hidden) closeSettings();
+    else if (overlayOpen()) closeOverlay(overlayOpen());
     else if (mode === 'play') pauseGame();
     else if (mode === 'pause') resumeGame();
   }
