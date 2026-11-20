@@ -66,7 +66,7 @@
 | Jump (press again in the air for a second jump) | `Space` | Jump button |
 | Slide | `Shift` | Slide button |
 | Turn the camera | Mouse drag | Drag on the screen |
-| Pause | `P` or `Esc` | Pause icon |
+| Pause (or close a window) | `P` or `Esc` | Pause icon |
 | Music on / off | `M` | Sound icon |
 | Effects on / off | `X` | Sound icon |
 | Language TR / EN | `L` | Language button |
@@ -153,6 +153,15 @@ Upgraded by **Claude Haiku 5.5** with Claude Code from [prompts/carsi-kacisi-v2.
 - **Audio (Web Audio only):** Synthesised darbuka-and-clarinet loop and sound effects generated entirely in code.
 
 </details>
+
+### v2.1 update (Nov 2026)
+
+Visible as `v2.1 · Kasım 2026` on the main menu; full notes in [CHANGELOG.md](CHANGELOG.md) (Turkish). Gameplay, save keys and URLs are unchanged.
+
+- **Achievements:** nine local goals (first catch, three stars, guild signs, a three-stall chain, the daily challenge, 300 m in the Bazaar Tour, ...) with an unlock toast. Players with existing progress get the matching ones silently. Stored under `arena.carsi.ach`.
+- **What's new window and version tag** on the main menu, plus a **More games** link to the hub.
+- **Page fixes:** tab icon (the browser was getting a 404 for `favicon.ico`), `theme-color`, a Turkish description and card text, and a `404.html`.
+- **Tests:** `node tools/smoke.mjs` and `node tools/gate.mjs`; set `PW_EXECUTABLE=<browser path>` to use a locally installed Chromium-based browser.
 
 ### Claude Game Arena
 
