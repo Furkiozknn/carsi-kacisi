@@ -22,10 +22,26 @@
 <!-- portals:end -->
 
 <p align="center">
+  <strong>Kubbeden kubbeye zıpla, tahta kayar, kedi yüzüğü kaptı! Türkçe kolay mı? Oyunda daha kolay.</strong>
+</p>
+
+<p align="center">
+  <strong>Turkish is easy… ON THE ROOFS? The game song asks the question; the game gives you the answer.</strong>
+</p>
+
+<p align="center">
+  Çarşı Kaçışı: İstanbul'daki kapalı çarşının kubbeleri üzerinde 3B çatı koşusu. Kuyumcunun yüzüğünü çalan kedinin peşinde genç bir çırak olarak on elle tasarlanmış bölümde çatılarda, kubbelerde, tahtalarda ve çamaşır iplerinde koşarsın.
+</p>
+
+<p align="center">
   <strong>A 3D rooftop runner over the domes of a covered bazaar in Istanbul: you are a young apprentice chasing the cat that stole a ring from the jeweller, across ten hand-built levels of roofs, domes, planks and laundry lines.</strong>
 </p>
 
 <!-- gameplay gif -->
+
+## Şarkı videosu / Song video
+
+**Çarşı Kaçışı · Oyun Şarkısı**: oyunun tanıtım şarkısı videosu, paylaşım videoları deposunda: [social-videos / 2026-11](https://github.com/Furkiozknn/social-videos/blob/master/2026-11/2026-11-21-carsi-kacisi-telefon.mp4). Videonun görsel stil notları: [docs/STIL.md](docs/STIL.md).
 
 ## Features
 
