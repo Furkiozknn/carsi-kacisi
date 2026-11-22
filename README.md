@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://furkiozknn.github.io/carsi-kacisi/">
-    <img src="docs/card.jpg" width="100%" alt="Çarşı Kaçışı: a 3D rooftop runner over the domes of an Istanbul covered bazaar. Click to play in your browser.">
+    <img src="docs/card-3d.jpg" width="100%" alt="Çarşı Kaçışı: a 3D rooftop runner over the domes of an Istanbul covered bazaar. Click to play in your browser.">
   </a>
 </p>
 
@@ -29,6 +29,13 @@
 
 ## Features
 
+<p align="center">
+  <img src="docs/features.jpg" width="100%" alt="Çarşı Kaçışı feature highlights on five hanging wooden bazaar signs: ten hand-built levels, three stars per level, numbered arch gates, an adaptive cat and stall chain combos, with the apprentice girl and the ginger cat on a rooftop at sunset.">
+</p>
+
+<details>
+<summary><b>Feature details</b></summary>
+
 - **Ten hand-built levels & rooftop chase:** Run, double jump in the air, slide down domes, and ride laundry lines across 10 levels on a roof map, chasing the Van cat with the ring 10 units ahead to return it to the jeweller after level 10.
 - **Three stars & numbered gate splits:** Earn 3 stars per level (finish within target time, collect 80% of lokum, 0 falls); pass numbered stone arch gates with real-time split toasts, saved best splits, and hidden guild signs (X/10) with 6 sourced historical facts.
 - **Adaptive cat & contextual hints:** Running without stopping for about 4 seconds brings the cat closer while falls set you back; contextual hint prompts appear the first time you encounter a gap, second jump, dome, laundry line, sliding plank, breaking tile, wind gust, or pigeons.
@@ -36,7 +43,16 @@
 - **Night levels & dynamic obstacles:** Levels 8 and 9 run at dusk with up to 3 pigeons flapping away from roofs, breaking tiles, sliding planks, and wind gust zones.
 - **Ultra-lean web performance:** A single `index.html` running Three.js r170 delivering 60 fps at 52–58 draw calls (level 1: 58, level 8: 55–56, level 10: 52–54; limit ~65), verified by an automated bot clearing 10/10 levels with 0 falls and 0 JS errors.
 
+</details>
+
 ## How to play
+
+<p align="center">
+  <img src="docs/how-to-play.jpg" width="100%" alt="How to play Çarşı Kaçışı: a stone-arch plaque lists three steps (sprint and leap, slide and ride, pace the chase) and a market-stall counter shows the keyboard controls, beside the girl and the cat running along a rooftop at dusk.">
+</p>
+
+<details>
+<summary><b>Goal and steps</b></summary>
 
 > [!TIP]
 > **Goal:** Follow the cat along the roofs and catch it at the end of each level. Falling into the street sends you back to the last checkpoint and costs the no-fall star.
@@ -44,6 +60,8 @@
 1. **Sprint & leap:** Run across the rooftops (`WASD` or arrow keys) and time your jumps (`Space`). Press jump again in mid-air for a second jump to clear wide gaps.
 2. **Slide & ride:** Hold `Shift` to slide down steep domes (gaining speed), walk onto low ledges (up to 0.45 units), or grab overhead laundry lines to glide across alleys.
 3. **Pace the chase:** Run steadily for ~4 seconds to close in on the cat. Watch out for breaking tiles, sliding planks, and sudden wind gusts.
+
+</details>
 
 <details>
 <summary><b>Rules and scoring</b></summary>
