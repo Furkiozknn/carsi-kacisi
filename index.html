@@ -5,14 +5,14 @@
 <meta name="arena-game" content="carsi-kacisi">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Çarşı Kaçışı</title>
-<meta name="description" content="İstanbul Kapalıçarşı'nın kubbeleri üzerinde 3D çatı koşusu: beyaz Van kedisini kovala, kapı ara zamanlarını geç, lokum topla. Tarayıcıda oynanır. / A 3D rooftop runner over the domes of an Istanbul covered bazaar. Plays in the browser.">
+<meta name="description" content="İstanbul Kapalıçarşı'nın kubbeleri üzerinde 3D çatı koşusu: yüzük hırsızı tekir kediyi kovala, kapı ara zamanlarını geç, lokum topla. Tarayıcıda oynanır. / A 3D rooftop runner over the domes of an Istanbul covered bazaar. Plays in the browser.">
 <meta name="theme-color" content="#3B2E2A">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%231A120B'/%3E%3Cpath d='M4 28 Q4 13 18 13 Q32 13 32 28 Z' fill='%23E88933'/%3E%3Cline x1='18' y1='6' x2='18' y2='13' stroke='%23F4B236' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='5' r='2' fill='%23F4B236'/%3E%3Ccircle cx='25' cy='13' r='4.5' fill='none' stroke='%232DD4BF' stroke-width='2'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="tr_TR">
 <meta property="og:site_name" content="Claude Game Arena">
 <meta property="og:title" content="Çarşı Kaçışı">
-<meta property="og:description" content="İstanbul Kapalıçarşı'nın kubbeleri üzerinde 3D çatı koşusu: beyaz Van kedisini kovala, kapı ara zamanlarını geç, lokum topla. Tarayıcıda oynanır.">
+<meta property="og:description" content="İstanbul Kapalıçarşı'nın kubbeleri üzerinde 3D çatı koşusu: yüzük hırsızı tekir kediyi kovala, kapı ara zamanlarını geç, lokum topla. Tarayıcıda oynanır.">
 <meta property="og:image:alt" content="Çarşı Kaçışı: Kapalıçarşı çatılarında 3D koşu oyunu">
 <meta property="og:url" content="https://furkiozknn.github.io/carsi-kacisi/">
 <meta property="og:image" content="https://furkiozknn.github.io/carsi-kacisi/docs/card.jpg">
@@ -370,6 +370,70 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 @media (prefers-reduced-motion: reduce){
   #touch,.toast,.hint,.notebook,.btn,.card,.stars-big svg.on,.combo,.touch-hint-pod,.touch-zone-left,.touch-zone-right{animation:none!important;transition:none!important}
 }
+/* ===== stil-3d (23.11.2026): menus and HUD in the song video's warm 3D world =====
+   The comic look (hard ink borders, offset black shadows, halftone dots) gives way to soft toy-like panels:
+   rounded cream cards lit from above, caramel bevels instead of black edges, warm sunset glass for the HUD.
+   Only looks change; sizes of the tap targets stay the same (44 px+). */
+:root{
+  --line:#c88a55;                 /* caramel bevel instead of the black ink line */
+  --bevel:#b8733d;
+  --shadow-sm:0 2px 6px rgba(110,50,15,0.18);
+  --shadow-md:0 6px 18px rgba(110,50,15,0.22),inset 0 1px 0 rgba(255,255,255,0.7);
+  --shadow-lg:0 22px 54px rgba(55,18,4,0.42),inset 0 2px 0 rgba(255,255,255,0.8);
+  --shadow-btn:0 5px 0 #d29a68,0 10px 18px rgba(110,50,15,0.2);
+}
+.screen{background:radial-gradient(ellipse at 50% 110%,rgba(255,170,90,0.42),transparent 62%),
+  linear-gradient(180deg,rgba(40,24,52,0.62) 0%,rgba(92,38,30,0.42) 50%,rgba(214,110,50,0.36) 100%);
+  backdrop-filter:blur(7px) saturate(1.1);-webkit-backdrop-filter:blur(7px) saturate(1.1)}
+.card{background:linear-gradient(180deg,#fffaf2 0%,#fdeedb 62%,#f9e0c2 100%);border:0;border-radius:30px;
+  box-shadow:var(--shadow-lg),inset 0 -6px 0 rgba(210,150,95,0.25)}
+.card-flourish{display:none}
+.card h1,.card h2{color:#b42318;text-shadow:0 2px 0 #ffd38c,0 5px 12px rgba(150,40,10,0.32)}
+.btn{border:0;border-radius:18px;background:linear-gradient(180deg,#fffaf4 0%,#f6e2c8 100%);color:#4a2a16;box-shadow:var(--shadow-btn)}
+.btn:hover:not(:disabled){background:linear-gradient(180deg,#fffdf9 0%,#fbe9d2 100%);box-shadow:0 7px 0 #d29a68,0 14px 22px rgba(110,50,15,0.24)}
+.btn:active:not(:disabled){box-shadow:0 1px 0 #d29a68,0 3px 8px rgba(110,50,15,0.2)}
+.btn.pri{background:linear-gradient(180deg,#ffbe62 0%,#f08a2c 100%);color:#fff;text-shadow:0 1px 2px rgba(120,45,0,0.55);
+  box-shadow:0 5px 0 #b75a17,0 12px 22px rgba(200,90,20,0.35)}
+.btn.pri:hover:not(:disabled){background:linear-gradient(180deg,#ffc977 0%,#f5953a 100%);filter:none;box-shadow:0 7px 0 #b75a17,0 16px 26px rgba(200,90,20,0.38)}
+.btn.pri:active:not(:disabled){box-shadow:0 1px 0 #b75a17,0 3px 8px rgba(200,90,20,0.3)}
+.btn:disabled{box-shadow:var(--shadow-btn)}
+.seg .btn[aria-pressed="true"]{background:linear-gradient(180deg,#2fb3a8 0%,#0f766e 100%);color:#fff;box-shadow:0 3px 0 #0a524c}
+.keys,.best,.stats-list li,.ulist li{border:0;background:rgba(255,255,255,0.72);box-shadow:var(--shadow-sm),inset 0 1px 0 #fff}
+.stats-list li.gates{background:rgba(214,246,240,0.85)}
+.foot{border:0;background:rgba(255,248,238,0.9);box-shadow:var(--shadow-sm)}
+.hud-pod,.stats-right{background:linear-gradient(180deg,rgba(255,250,242,0.92),rgba(252,232,206,0.9));border:0!important;
+  box-shadow:0 6px 18px rgba(80,30,8,0.28),inset 0 1px 0 #fff!important}
+.ibtn{border:0;background:linear-gradient(180deg,#fffaf3,#f3d9ba);box-shadow:0 3px 0 #c98d58,0 6px 12px rgba(90,40,10,0.22)}
+.ibtn:hover{background:linear-gradient(180deg,#ffd9a0,#f5a54e);box-shadow:0 5px 0 #c98d58,0 8px 14px rgba(90,40,10,0.24)}
+.ibtn:active{box-shadow:0 1px 0 #c98d58}
+.stat svg,.icon-lokum,.icon-dist,.brand svg,.stars svg{filter:drop-shadow(0 1px 1.5px rgba(80,30,8,0.35))}
+.brand{border-right-color:rgba(160,90,40,0.25)}
+.brand-ico{width:30px;height:30px;border-radius:50%;object-fit:cover;box-shadow:0 2px 6px rgba(80,30,8,0.35),0 0 0 2px #fff}
+.toast,.notebook{border:0;box-shadow:0 8px 22px rgba(80,30,8,0.28),inset 0 1px 0 rgba(255,255,255,0.7)}
+.combo,.newrec{border:0;box-shadow:0 3px 0 #8c1c14,0 6px 12px rgba(120,20,10,0.3)}
+.mapbox{border:0;box-shadow:inset 0 2px 10px rgba(90,40,10,0.18),0 8px 20px rgba(90,40,10,0.2)}
+.node{border:0;background:linear-gradient(180deg,#fffaf3,#f1d7b6);box-shadow:0 4px 0 #c48650,0 8px 14px rgba(90,40,10,0.25)}
+.node.open{background:linear-gradient(180deg,#2fb3a8,#0f766e)}
+.node.done{background:linear-gradient(180deg,#ffc56e,#ef8b2e)}
+.node small{border:0;box-shadow:var(--shadow-sm)}
+.stars-big svg{filter:drop-shadow(0 4px 6px rgba(120,60,10,0.35))}
+#stick i,.tbtn{border:0}
+#tJump{background:linear-gradient(180deg,#ffbe62,#f08a2c);color:#fff;box-shadow:0 5px 0 #b75a17,0 10px 18px rgba(0,0,0,0.25)}
+#tSlide{background:linear-gradient(180deg,#fffaf3,#f3d9ba);box-shadow:0 4px 0 #c98d58,0 8px 14px rgba(0,0,0,0.22)}
+#stick i{background:linear-gradient(180deg,#ffbe62,#f08a2c)}
+.touch-hint-pod{border:0;box-shadow:0 4px 12px rgba(80,30,8,0.28)}
+/* the song video's 3D characters on the cards (video key frame and Copilot renders) */
+.hero{display:block;width:100%;height:190px;object-fit:cover;object-position:50% 30%;border-radius:22px;margin:0 0 6px;
+  box-shadow:0 10px 24px rgba(90,30,8,0.3),inset 0 0 0 1px rgba(255,255,255,0.4);background:#f3c58f}
+.mascot{height:auto;width:min(100%,210px);aspect-ratio:1/1;object-fit:cover;border-radius:22px;margin:4px auto 14px;
+  filter:none;box-shadow:0 10px 24px rgba(90,30,8,0.3)}
+@media (max-width:680px){.hero{height:150px}}
+/* short screens (1280x720, 1366x768, small phones): the card image takes the old mascot's 92 px, so every
+   result button stays on screen as on main */
+@media (max-height:900px){.mascot{width:min(100%,160px)}}
+@media (max-height:800px){.mascot{width:auto;height:92px;margin:6px auto 8px;border-radius:16px}.hero{height:120px}}
+@media (max-height:500px){.hero{height:96px}.mascot{height:64px}}
+@media (max-height:440px){#scTitle .hero{display:none}}
 </style>
 <script>/*ARENA-KIT:BEGIN v1.3.2 sha256:ce77e23fab7c*/
 /* ARENA-KIT v1 — shared layer for the 21 Claude Game Arena games.
@@ -1510,14 +1574,7 @@ window.ArenaCore = { version: VERSION, kalite, render, kabuk, his, kamera, test,
 <header class="topbar" id="hud" hidden>
   <div class="hud-pod hud-left">
     <div class="brand">
-      <svg class="logo-mini" viewBox="0 0 36 36" aria-hidden="true">
-        <path d="M4 27 Q4 12 18 12 Q32 12 32 27 Z" fill="#7D8A96"/>
-        <path d="M10 27 Q10 17 18 17 Q26 17 26 27 Z" fill="#A4B0BC"/>
-        <line x1="18" y1="5" x2="18" y2="12" stroke="#F4B236" stroke-width="2.5" stroke-linecap="round"/>
-        <circle cx="18" cy="4" r="2" fill="#F4B236"/>
-        <circle cx="25" cy="12" r="4.5" fill="none" stroke="#F4B236" stroke-width="2"/>
-        <circle cx="23" cy="10" r="1.2" fill="#2DD4BF"/>
-      </svg>
+      <img class="brand-ico" src="assets/3d/kedi-ikon.webp" alt="" width="30" height="30">
       <span data-t="name"></span>
     </div>
     <div class="stats stats-left">
@@ -1592,45 +1649,8 @@ window.ArenaCore = { version: VERSION, kalite, render, kabuk, his, kamera, test,
   <div class="card">
     <div class="card-flourish tl"></div><div class="card-flourish tr"></div>
     <div class="card-flourish bl"></div><div class="card-flourish br"></div>
-    <!-- Bespoke Grand Bazaar & Leaping Van Cat Architectural Emblem -->
-    <svg class="logo" viewBox="0 0 120 120" aria-hidden="true">
-      <defs>
-        <radialGradient id="skyGrad" cx="50%" cy="85%" r="75%">
-          <stop offset="0%" stop-color="#FFD494"/>
-          <stop offset="45%" stop-color="#E88933"/>
-          <stop offset="85%" stop-color="#3B2E2A"/>
-          <stop offset="100%" stop-color="#1A120B"/>
-        </radialGradient>
-      </defs>
-      <!-- Outer Ottoman Arch Medallion -->
-      <circle cx="60" cy="60" r="56" fill="url(#skyGrad)" stroke="#1A120B" stroke-width="4.5"/>
-      <circle cx="60" cy="60" r="50" fill="none" stroke="#2DD4BF" stroke-width="1.8" stroke-dasharray="6 3" opacity="0.85"/>
-      <!-- Grand Bazaar Rooftop Domes (Background silhouettes) -->
-      <path d="M12 92 Q12 70 34 70 Q56 70 56 92 Z" fill="#2E201B"/>
-      <path d="M46 94 Q46 60 76 60 Q106 60 106 94 Z" fill="#3B2E2A"/>
-      <path d="M78 94 Q78 74 96 74 Q114 74 114 94 Z" fill="#241813"/>
-      <!-- Minaret & Dome Finials (Alems) -->
-      <line x1="76" y1="60" x2="76" y2="46" stroke="#F4B236" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="76" cy="44" r="3" fill="#F4B236"/>
-      <!-- Leaping White Van Cat with Auburn Patches & Stolen Gold Ring -->
-      <g transform="translate(18, 12)">
-        <path d="M22 46 C20 40, 26 34, 38 35 C48 36, 56 30, 64 24 C68 21, 74 23, 76 28 C77 31, 74 36, 68 39 C58 44, 46 47, 36 49 C28 50, 23 49, 22 46 Z" fill="#FDFBF7" stroke="#1A120B" stroke-width="2.2" stroke-linejoin="round"/>
-        <path d="M66 25 C68 20, 75 19, 78 23 C81 27, 78 32, 73 32 Z" fill="#FDFBF7" stroke="#1A120B" stroke-width="2.2"/>
-        <path d="M72 21 L77 14 L81 21 Z" fill="#A4502A" stroke="#1A120B" stroke-width="2"/>
-        <path d="M67 23 L69 16 L74 22 Z" fill="#FDFBF7" stroke="#1A120B" stroke-width="2"/>
-        <path d="M73 20 C76 20, 78 22, 77 25 C75 25, 73 23, 73 20 Z" fill="#A4502A"/>
-        <ellipse cx="74" cy="26" rx="1.5" ry="2.2" fill="#2DD4BF" transform="rotate(-15 74 26)"/>
-        <circle cx="74.2" cy="25.5" r="0.6" fill="#1A120B"/>
-        <path d="M23 44 C15 42, 10 32, 12 24 C13 18, 18 16, 20 20 C21 24, 18 32, 24 38 Z" fill="#FDFBF7" stroke="#1A120B" stroke-width="2.2"/>
-        <path d="M12 24 C13 18, 18 16, 20 20 C20.5 21, 19 24, 17 26 C14 26, 12.5 25, 12 24 Z" fill="#A4502A"/>
-        <path d="M64 36 C66 40, 70 42, 74 41" fill="none" stroke="#1A120B" stroke-width="2.4" stroke-linecap="round"/>
-        <!-- Stolen Jeweller's Gold Ring -->
-        <circle cx="82" cy="38" r="6.5" fill="none" stroke="#F4B236" stroke-width="2.6"/>
-        <circle cx="80" cy="33" r="2.2" fill="#2DD4BF" stroke="#1A120B" stroke-width="1.2"/>
-      </g>
-      <!-- Kinetic Motion Dashes -->
-      <path d="M22 66 L34 66 M16 72 L30 72 M20 78 L28 78" stroke="#FDFBF7" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
-    </svg>
+    <!-- stil-3d: the song video's key frame (apprentice girl and the ring thief cat) instead of the flat emblem -->
+    <img class="hero" src="assets/3d/baslik.webp" alt="" width="560" height="627" decoding="async">
     <h1 id="tTitle" data-t="name"></h1>
     <p class="sub" data-t="sub"></p>
     <p class="how" data-t="how"></p>
@@ -1738,7 +1758,7 @@ window.ArenaCore = { version: VERSION, kalite, render, kabuk, his, kamera, test,
     <p class="sub" id="rSub"></p>
     <div class="stars-big" id="rStars"></div>
     <ul class="stats-list" id="rStats"></ul>
-    <img class="mascot" id="rMascot" alt="" src="assets/mascot/kedi-tamam.png" hidden>
+    <img class="mascot" id="rMascot" alt="" src="assets/3d/yakalandi.webp" hidden>
     <div class="col">
       <button class="btn pri" id="rNext" data-t="next"></button>
       <div class="row">
@@ -1758,7 +1778,7 @@ window.ArenaCore = { version: VERSION, kalite, render, kabuk, his, kamera, test,
     <h2 id="eTitle" data-t="ending"></h2>
     <p class="sub" data-t="endingSub"></p>
     <ul class="stats-list" id="eStats"></ul>
-    <img class="mascot" id="eMascot" alt="" src="assets/mascot/kedi-kutlama.png" hidden>
+    <img class="mascot" id="eMascot" alt="" src="assets/3d/ikili.webp" hidden>
     <div class="col">
       <button class="btn pri" id="eMenu" data-t="mainMenu"></button>
       <button class="btn" id="eAgain" data-t="again"></button>
@@ -2060,7 +2080,7 @@ const STALL_WIN = 2.6, STALL_HX = 1.05, STALL_HZ = 0.95, STALL_MAX = 24;
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;   // stil-3d: soft studio shadows
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 420);
 
@@ -2075,7 +2095,7 @@ sun.shadow.camera.updateProjectionMatrix();
 scene.add(hemi, sun, sun.target);
 
 // arena-core v2 render preset: neutral tone mapping, a little room light, gentle bloom on the dusk sky, vignette, grade
-const CFX = window.ArenaCore ? ArenaCore.render.setup(renderer, scene, camera, { tonlama: 'neutral', pozlama: 1.05, ortam: 0.12, bloom: { guc: 0.3, esik: 0.85, yaricap: 0.35 }, vinyet: 0.26, grain: 0.03, renk: { doygunluk: 1.1, kontrast: 1.06 } }) : null;
+const CFX = window.ArenaCore ? ArenaCore.render.setup(renderer, scene, camera, { tonlama: 'neutral', pozlama: 0.92, ortam: 0.3, bloom: { guc: 0.3, esik: 0.85, yaricap: 0.35 }, vinyet: 0.26, grain: 0.03, renk: { doygunluk: 1.1, kontrast: 1.06 } }) : null;
 
 const SKY_R = 360;
 const skyMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false });
@@ -2083,7 +2103,7 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(SKY_R, 24, 16), skyMat);
 scene.add(sky);
 // day levels read as dusk: indigo zenith, coral middle, saffron horizon; the night levels keep their own sky
 const PAL = {
-  day: { top: 0x2f3f9a, mid: 0xe8775c, hor: 0xffc88a, fog: 0xf2a478, sun: 0xffdca8, sunI: 2.4, hemi: 1.05 },
+  day: { top: 0x2f3f9a, mid: 0xe8775c, hor: 0xffc88a, fog: 0xf2a478, sun: 0xffd2a0, sunI: 2.4, hemi: 0.85 },
   night: { top: 0x070d24, mid: 0x18275a, hor: 0x6b4f7e, fog: 0x4a3c6e, sun: 0xffb27a, sunI: 0.9, hemi: 0.8 },
   dusk: { top: 0x3b4f9c, mid: 0xe89a6a, hor: 0xffc27a, fog: 0xe5a57a, sun: 0xffb070, sunI: 2.2, hemi: 1.0 }
 };
@@ -2105,6 +2125,33 @@ function paintSky(name) {
   g.attributes.color.needsUpdate = true;
   scene.fog = new THREE.Fog(p.fog, 75, 290);
   sun.color.setHex(p.sun); sun.intensity = p.sunI; hemi.intensity = p.hemi;
+  skyBand.material.color.setHex(SKY_TINT[name] || 0xffffff);
+}
+
+/* stil-3d (23.11): a painted dusk sky over the gradient dome, like the song video's sunset (Copilot image,
+   assets/3d/gokyuzu.webp). An open cylinder inside the sky sphere, two mirrored repeats around the horizon
+   (the two suns sit 108 degrees apart, so one shows at a time), its top fades into the sphere's indigo zenith.
+   It follows the camera like the sphere; night levels tint it dark blue. ?noassets keeps the plain gradient. */
+const SKY_TINT = { day: 0xffffff, dusk: 0xfff2e6, night: 0x47527e };
+const skyBand = new THREE.Mesh(new THREE.CylinderGeometry(340, 340, 400, 48, 1, true),
+  new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false, transparent: true, opacity: 1, toneMapped: false }));
+skyBand.geometry.translate(0, 168, 0);   // the image's distant skyline sits just under the eye line
+skyBand.rotation.y = -0.55;   // a sun ahead of the runner, a little right of the path
+skyBand.visible = false;
+scene.add(skyBand);
+if (!FLAG.noassets) {
+  new THREE.TextureLoader().load('assets/3d/gokyuzu.webp', tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.MirroredRepeatWrapping; tex.repeat.set(2, 1);
+    const a = document.createElement('canvas'); a.width = 4; a.height = 64;
+    const ax = a.getContext('2d'), gr = ax.createLinearGradient(0, 0, 0, 64);
+    gr.addColorStop(0, '#000'); gr.addColorStop(0.22, '#fff'); gr.addColorStop(1, '#fff');
+    ax.fillStyle = gr; ax.fillRect(0, 0, 4, 64);
+    skyBand.material.map = tex;
+    skyBand.material.alphaMap = new THREE.CanvasTexture(a);
+    skyBand.material.needsUpdate = true;
+    skyBand.visible = true;
+  }, undefined, () => { });
 }
 
 /* ---------- gate numbers: one canvas atlas with 1..18 in cells, so all gates draw in one call ---------- */
@@ -2120,7 +2167,9 @@ const digitAtlas = (() => {
 /* ---------- cel shading: a three-step ramp, so lit, mid and shadow faces read as flat bands ---------- */
 const RAMP = new THREE.DataTexture(new Uint8Array([120, 190, 255]), 3, 1, THREE.RedFormat);
 RAMP.minFilter = RAMP.magFilter = THREE.NearestFilter; RAMP.generateMipmaps = false; RAMP.needsUpdate = true;
-const toon = o => new THREE.MeshToonMaterial(Object.assign({ gradientMap: RAMP }, o));
+// stil-3d (23.11): the song video's soft clay look instead of flat cel bands. Same colours, physically lit,
+// slightly rough so the warm dusk key light and the room fill model every round shape (RAMP stays unused).
+const toon = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.72, metalness: 0 }, o));
 
 /* ---------- shared materials and primitive geometry ---------- */
 const M = {
@@ -2135,7 +2184,7 @@ const M = {
   pants: toon({ color: 0x3b3a4a }),
   cat: toon({ color: 0xa4502a }),          // auburn: tail and ear patches of the Turkish Van
   catW: toon({ color: 0xf4ead8 }),
-  gold: toon({ color: 0xE8B04B, emissive: 0x4a2c00 }),
+  gold: toon({ color: 0xE8B04B, emissive: 0x4a2c00, metalness: 0.75, roughness: 0.28 }),
   bird: toon({ color: 0x7d8aa0 }),
   birdW: toon({ color: 0xe9edf2 }),
   water: toon({ color: 0x3f8fa8 }),
@@ -2163,6 +2212,8 @@ function inkMat(thick) {
   return m;
 }
 const INK_CHAR = inkMat(0.05), INK_WORLD = inkMat(0.035);
+// stil-3d: no ink outlines in the 3D clay look; a hidden material is skipped by the renderer (no draw call)
+INK_CHAR.visible = INK_WORLD.visible = false;
 // a moon in the night sky; it follows the camera so it never moves away
 const MOON_DIR = new THREE.Vector3(0.12, 0.26, -1).normalize();   // ahead of the runner, above the vanishing point
 const moon = new THREE.Mesh(new THREE.SphereGeometry(9, 20, 14), M.moon);
@@ -2816,17 +2867,53 @@ function inked(parent, pieces, ink) {
   parent.add(m);
   return m;
 }
+/* stil-3d (23.11): the two characters of the song video, as soft chibi toys. The rig is unchanged (g, body, legL/R,
+   armL/R pivots for the runner; body, head and tail pivots for the cat), so animation and physics see no difference.
+   The runner is the bazaar apprentice girl: big head, long dark braid down her back (the camera sees it), small red
+   fez, red vest over a teal shirt, baggy olive salvar and brown shoes. Her face looks toward -z, the running way. */
+function smoothG(kind, x, y, z, sx, sy, sz, hex) {
+  const g = kind === 'cap' ? new THREE.CapsuleGeometry(0.5, 1, 6, 14) : kind === 'cyl' ? new THREE.CylinderGeometry(0.5, 0.5, 1, 22)
+    : kind === 'cone' ? new THREE.ConeGeometry(0.5, 1, 14) : new THREE.SphereGeometry(0.5, 22, 16);
+  g.scale(sx, sy, sz); g.translate(x, y, z);
+  return paint(g, hex);
+}
+function apprenticeParts(tint, part) {
+  // (colours inside the function: makePlayer runs before this point of the module is reached)
+  const APP = { skin: 0xf2c6a4, hair: 0x2e211b, fez: 0xb42318, vest: 0xc7302c, shirt: 0x1f8f8a, salvar: 0x5f7442, shoe: 0x6b3f24, eye: 0x1b120e, white: 0xffffff };
+  const c = h => tint == null ? h : tint;
+  const S = (k, x, y, z, sx, sy, sz, h) => smoothG(k, x, y, z, sx, sy, sz, c(h));
+  if (part === 'leg') return [S('cap', 0, -0.22, 0, 0.25, 0.28, 0.25, APP.salvar), S('sph', 0, -0.52, -0.05, 0.2, 0.15, 0.3, APP.shoe)];
+  if (part === 'arm') return [S('cap', 0, -0.17, 0, 0.17, 0.2, 0.17, APP.shirt), S('sph', 0, -0.38, 0, 0.13, 0.13, 0.13, APP.skin)];
+  const body = [
+    S('sph', 0, 0.62, 0, 0.5, 0.36, 0.4, APP.salvar),               // salvar seat
+    S('cap', 0, 0.86, 0, 0.42, 0.22, 0.34, APP.shirt),              // teal shirt
+    S('cap', 0, 0.86, 0.01, 0.45, 0.2, 0.36, APP.vest),             // red vest over it (shirt shows at sleeves and collar)
+    S('cyl', 0, 1.12, 0, 0.2, 0.08, 0.2, APP.skin),                 // neck
+    S('sph', 0, 1.42, 0, 0.66, 0.62, 0.62, APP.skin),               // big chibi head
+    S('sph', 0, 1.5, 0.05, 0.7, 0.6, 0.62, APP.hair),               // hair cap: back and top, face left open toward -z
+    S('sph', 0, 1.62, -0.12, 0.62, 0.26, 0.46, APP.hair),           // side-swept fringe
+    S('cyl', 0.05, 1.83, 0.02, 0.3, 0.17, 0.3, APP.fez),            // small red fez
+    S('sph', -0.12, 1.4, -0.29, 0.13, 0.16, 0.06, APP.eye),         // eyes
+    S('sph', 0.12, 1.4, -0.29, 0.13, 0.16, 0.06, APP.eye),
+    S('sph', -0.1, 1.44, -0.32, 0.04, 0.04, 0.02, APP.white),
+    S('sph', 0.14, 1.44, -0.32, 0.04, 0.04, 0.02, APP.white)
+  ];
+  for (let i = 0; i < 5; i++) body.push(S('sph', 0, 1.3 - i * 0.12, 0.33 + i * 0.012, 0.15 - i * 0.012, 0.15, 0.14, APP.hair));   // braid
+  body.push(S('sph', 0, 0.68, 0.39, 0.07, 0.1, 0.07, APP.fez));      // braid tie
+  return body;
+}
 function makePlayer() {
   const g = new THREE.Group();
   const body = new THREE.Group(); g.add(body);
-  inked(body, [boxG(-0.26, 0.26, 0.75, 1.45, -0.18, 0.18, 0x0F766E), blobG(0, 1.66, 0, 0.22, 0.24, 0.22, 0xc98f63), cylG(0, 1.87, 0, 0.22, 0.14, 0.22, 0xB42318)], INK_CHAR);
-  const legL = pivot(body, -0.13, 0.78); inked(legL, [boxG(-0.08, 0.08, -0.74, 0, -0.09, 0.09, 0x3b3a4a)], INK_CHAR);
-  const legR = pivot(body, 0.13, 0.78); inked(legR, [boxG(-0.08, 0.08, -0.74, 0, -0.09, 0.09, 0x3b3a4a)], INK_CHAR);
-  const armL = pivot(body, -0.36, 1.38); inked(armL, [boxG(-0.07, 0.07, -0.6, 0, -0.07, 0.07, 0x0F766E)], INK_CHAR);
-  const armR = pivot(body, 0.36, 1.38); inked(armR, [boxG(-0.07, 0.07, -0.6, 0, -0.07, 0.07, 0x0F766E)], INK_CHAR);
+  const A = part => apprenticeParts(null, part);
+  inked(body, A('body'), INK_CHAR);
+  const legL = pivot(body, -0.12, 0.6); inked(legL, A('leg'), INK_CHAR);
+  const legR = pivot(body, 0.12, 0.6); inked(legR, A('leg'), INK_CHAR);
+  const armL = pivot(body, -0.27, 1.02); inked(armL, A('arm'), INK_CHAR);
+  const armR = pivot(body, 0.27, 1.02); inked(armR, A('arm'), INK_CHAR);
   return { g, body, legL, legR, armL, armR };
 }
-// Translucent semi-transparent ghost mesh for mirroring the best run
+// Translucent semi-transparent ghost mesh for mirroring the best run (same chibi shape, turquoise glass)
 function makeGhostPlayer() {
   const g = new THREE.Group();
   const body = new THREE.Group(); g.add(body);
@@ -2838,27 +2925,37 @@ function makeGhostPlayer() {
     parent.add(m);
     return m;
   };
-  addGhostPart(body, [boxG(-0.26, 0.26, 0.75, 1.45, -0.18, 0.18, 0x2DD4BF), blobG(0, 1.66, 0, 0.22, 0.24, 0.22, 0x2DD4BF), cylG(0, 1.87, 0, 0.22, 0.14, 0.22, 0x2DD4BF)]);
-  const legL = pivot(body, -0.13, 0.78); addGhostPart(legL, [boxG(-0.08, 0.08, -0.74, 0, -0.09, 0.09, 0x2DD4BF)]);
-  const legR = pivot(body, 0.13, 0.78); addGhostPart(legR, [boxG(-0.08, 0.08, -0.74, 0, -0.09, 0.09, 0x2DD4BF)]);
-  const armL = pivot(body, -0.36, 1.38); addGhostPart(armL, [boxG(-0.07, 0.07, -0.6, 0, -0.07, 0.07, 0x2DD4BF)]);
-  const armR = pivot(body, 0.36, 1.38); addGhostPart(armR, [boxG(-0.07, 0.07, -0.6, 0, -0.07, 0.07, 0x2DD4BF)]);
+  const P0 = part => apprenticeParts(0x2DD4BF, part);
+  addGhostPart(body, P0('body'));
+  const legL = pivot(body, -0.12, 0.6); addGhostPart(legL, P0('leg'));
+  const legR = pivot(body, 0.12, 0.6); addGhostPart(legR, P0('leg'));
+  const armL = pivot(body, -0.27, 1.02); addGhostPart(armL, P0('arm'));
+  const armR = pivot(body, 0.27, 1.02); addGhostPart(armR, P0('arm'));
   return { g, body, legL, legR, armL, armR, anim: 0 };
 }
-// The thief cat: a white Turkish Van with auburn tail and ear patches. Its head is a pivot, so it can turn to look back.
+// The thief cat of the song video: a chubby orange tabby with a white muzzle and chest, big green eyes and dark
+// tabby stripes. Its head is a pivot, so it can turn to look back; the face looks toward -z.
 function makeCat() {
   const g = new THREE.Group();
   const body = new THREE.Group(); g.add(body);
-  const CW = 0xf4ead8, CA = 0xa4502a;
-  // body, saddle and the four legs are one mesh (the legs never move, so they need no pivots)
-  inked(body, [blobG(0, 0.42, 0, 0.5, 0.4, 0.86, CW), blobG(0, 0.66, 0.1, 0.3, 0.12, 0.36, CA),
-    boxG(-0.19, -0.09, 0, 0.28, -0.35, -0.25, CW), boxG(0.09, 0.19, 0, 0.28, -0.35, -0.25, CW),
-    boxG(-0.19, -0.09, 0, 0.28, 0.25, 0.35, CW), boxG(0.09, 0.19, 0, 0.28, 0.25, 0.35, CW)], INK_CHAR);
-  const head = new THREE.Group(); head.position.set(0, 0.66, -0.5); body.add(head);
-  inked(head, [blobG(0, 0, 0, 0.38, 0.34, 0.38, CW), blobG(0, -0.08, -0.22, 0.2, 0.14, 0.18, CW),
-    boxG(-0.175, -0.065, 0.17, 0.37, -0.04, 0.04, CA), boxG(0.065, 0.175, 0.17, 0.37, -0.04, 0.04, CA)], INK_CHAR);
+  const OR = 0xe49447, ST = 0xb0601f, WH = 0xfaf1e4, PK = 0xf2a0a0, GR = 0x5cae4a, DK = 0x1b120e;
+  const S = smoothG;
+  // body, chest, stripes and the four paws are one mesh (the legs never move, so they need no pivots)
+  const bp = [S('sph', 0, 0.42, 0, 0.62, 0.52, 0.9, OR), S('sph', 0, 0.38, -0.3, 0.42, 0.42, 0.36, WH)];
+  for (let i = 0; i < 3; i++) bp.push(S('sph', 0, 0.62, 0.05 + i * 0.2, 0.5, 0.12, 0.07, ST));   // stripes over the back
+  for (const [x, z] of [[-0.17, -0.3], [0.17, -0.3], [-0.17, 0.3], [0.17, 0.3]]) bp.push(S('sph', x, 0.1, z, 0.18, 0.2, 0.22, WH));
+  inked(body, bp, INK_CHAR);
+  const head = new THREE.Group(); head.position.set(0, 0.74, -0.5); body.add(head);
+  inked(head, [S('sph', 0, 0, 0, 0.84, 0.74, 0.76, OR), S('sph', 0, -0.13, -0.27, 0.42, 0.28, 0.26, WH),
+    S('cone', -0.22, 0.36, 0.02, 0.24, 0.3, 0.16, OR), S('cone', 0.22, 0.36, 0.02, 0.24, 0.3, 0.16, OR),
+    S('cone', -0.22, 0.34, -0.04, 0.13, 0.2, 0.06, PK), S('cone', 0.22, 0.34, -0.04, 0.13, 0.2, 0.06, PK),
+    S('sph', -0.15, 0.04, -0.33, 0.18, 0.2, 0.08, GR), S('sph', 0.15, 0.04, -0.33, 0.18, 0.2, 0.08, GR),
+    S('sph', -0.15, 0.04, -0.37, 0.08, 0.14, 0.04, DK), S('sph', 0.15, 0.04, -0.37, 0.08, 0.14, 0.04, DK),
+    S('sph', -0.13, 0.08, -0.39, 0.035, 0.035, 0.02, 0xffffff), S('sph', 0.17, 0.08, -0.39, 0.035, 0.035, 0.02, 0xffffff),
+    S('sph', 0, -0.08, -0.4, 0.07, 0.05, 0.04, 0xe5787a),
+    S('sph', 0, 0.26, 0.0, 0.1, 0.1, 0.5, ST), S('sph', -0.14, 0.24, 0.02, 0.07, 0.08, 0.45, ST), S('sph', 0.14, 0.24, 0.02, 0.07, 0.08, 0.45, ST)], INK_CHAR);
   const tail = pivot(body, 0, 0.5);
-  inked(tail, [boxG(-0.05, 0.05, 0.05, 0.15, -0.05, 0.65, CA)], INK_CHAR);
+  inked(tail, [S('cap', 0, 0.3, 0.5, 0.13, 0.42, 0.13, OR), S('sph', 0, 0.78, 0.5, 0.16, 0.18, 0.16, ST)], INK_CHAR);   // tail up in the air
   g.scale.setScalar(1.9);   // larger so the target reads from the camera
   return { g, body, head, tail };
 }
@@ -3766,6 +3863,7 @@ function frameVisuals(dt, now) {
   // shadows follow the runner; the sky and the moon follow the camera
   updateSun();
   sky.position.copy(camera.position);
+  skyBand.position.copy(camera.position);
   moon.position.copy(camera.position).addScaledVector(MOON_DIR, 300);
   if (L && L.endless) {
     if (backdropStreet) backdropStreet.position.z = P.z - 200;
@@ -4059,6 +4157,7 @@ function showResult(stars, r) {
   el('rStats').innerHTML = rows.map(([a, b]) => '<li><span>' + a + '</span><b>' + b + '</b></li>').join('') +
     (gates.length ? '<li class="gates"><span>' + tx('gate') + ' (s)</span><b>' + gates.join(' · ') + '</b></li>' : '');
   el('rMascot').hidden = FLAG.noassets;
+  if (!FLAG.noassets) el('rMascot').src = 'assets/3d/yakalandi.webp';   // caught: the ring is back in her hand
   el('rRecord').hidden = !r.record;
   el('rNext').hidden = LI >= LEVELS.length - 1 || !!DAILY;
   if (DAILY && DAILY.rec) el('rSub').textContent = tx('daily') + ' · ' + tx('dailyLine', { s: DAILY.rec.streak, b: DAILY.rec.best });
@@ -4097,6 +4196,7 @@ function showEndlessResult(r) {
   ];
   el('rStats').innerHTML = rows.map(([a, b]) => '<li><span>' + a + '</span><b>' + b + '</b></li>').join('');
   el('rMascot').hidden = FLAG.noassets;
+  if (!FLAG.noassets) el('rMascot').src = 'assets/3d/ikili.webp';   // endless: the cat is still free
   el('rRecord').hidden = !r.record;
   el('rNext').hidden = true;
   el('rRetry').textContent = tx('retry');
