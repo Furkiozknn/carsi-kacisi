@@ -428,7 +428,11 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .mascot{height:auto;width:min(100%,210px);aspect-ratio:1/1;object-fit:cover;border-radius:22px;margin:4px auto 14px;
   filter:none;box-shadow:0 10px 24px rgba(90,30,8,0.3)}
 @media (max-width:680px){.hero{height:150px}}
-@media (max-height:500px){.hero{height:96px}.mascot{width:120px}}
+/* short screens (1280x720, 1366x768, small phones): the card image takes the old mascot's 92 px, so every
+   result button stays on screen as on main */
+@media (max-height:900px){.mascot{width:min(100%,160px)}}
+@media (max-height:800px){.mascot{width:auto;height:92px;margin:6px auto 8px;border-radius:16px}.hero{height:120px}}
+@media (max-height:500px){.hero{height:96px}.mascot{height:64px}}
 @media (max-height:440px){#scTitle .hero{display:none}}
 </style>
 <script>/*ARENA-KIT:BEGIN v1.3.2 sha256:ce77e23fab7c*/
